@@ -1,0 +1,946 @@
+// Onerp desk UI — matches login theme (brand_theme.scss)
+// Change colours in brand_theme.scss only.
+
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+:root,
+[data-theme="light"] {
+	/* Map Onerp tokens → login brand tokens */
+	--onrp-primary: var(--theme-brand);
+	--onrp-primary-hover: var(--theme-brand-dark);
+	--onrp-primary-soft: color-mix(in srgb, var(--theme-brand) 12%, #fff);
+	--onrp-border: var(--theme-border);
+	--onrp-icon-tile: #f3f4f6;
+	--onrp-surface: #ffffff;
+	--onrp-canvas: var(--theme-bg);
+	--onrp-text: var(--theme-text);
+	--onrp-text-muted: var(--theme-muted);
+	--onrp-radius-lg: var(--theme-radius);
+	--onrp-radius-tile: 20px;
+	--onrp-shadow-card: 0 1px 3px 0 rgba(22, 35, 47, 0.08), 0 1px 2px -1px rgba(22, 35, 47, 0.06);
+	--onrp-shadow-card-hover: 0 14px 30px rgba(22, 35, 47, 0.12);
+
+	/* Dark surfaces = login right panel / sidebars */
+	--onrp-sidebar-bg: var(--theme-navy);
+	--onrp-sidebar-fg: #ffffff;
+	--onrp-sidebar-muted: rgba(255, 255, 255, 0.7);
+	--onrp-sidebar-hover: rgba(255, 255, 255, 0.12);
+	--onrp-sidebar-active: rgba(255, 255, 255, 0.18);
+
+	/* Frappe theme-level brand */
+	--primary: var(--theme-brand);
+	--btn-primary: var(--theme-brand);
+	--btn-primary-border: var(--theme-brand);
+	--text-on-primary: #ffffff;
+	--border-primary: var(--theme-brand);
+	--brand-color: var(--theme-brand);
+
+	body {
+		font-family: var(--theme-font);
+		background-color: var(--onrp-canvas);
+	}
+}
+
+// ---------------------------------------------------------------
+// App shell header
+// Home = navy bar (like bisonstechs dashboard)
+// Module pages = white bar (like bisonstechs accounting)
+// ---------------------------------------------------------------
+header.navbar {
+	min-height: 64px;
+	height: 64px;
+	padding: 10px 16px;
+	box-shadow: none;
+
+	.navbar-brand {
+		padding: 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+
+		.onerp-brand-logo {
+			display: inline-flex;
+			align-items: center;
+			background: #ffffff;
+			border: 1px solid var(--onrp-border);
+			border-radius: 10px;
+			padding: 4px 10px;
+
+			.app-logo {
+				display: inline-block;
+				height: 32px;
+				width: auto;
+				max-height: none;
+				margin-right: 0;
+			}
+		}
+	}
+}
+
+/* Home dashboard navbar — dark full-bleed like bisonstechs */
+body.onerp-home-route,
+body[data-route="home"],
+body[data-route^="home/"] {
+	padding-left: 0 !important;
+
+	header.navbar {
+		background-color: var(--onrp-sidebar-bg);
+		border-bottom: none;
+		margin-left: 0 !important;
+		width: 100% !important;
+
+		.navbar-home .onerp-brand-logo {
+			border-color: rgba(255, 255, 255, 0.25);
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+		}
+
+		.nav-link,
+		.btn-reset,
+		.notifications-icon,
+		a {
+			color: rgba(255, 255, 255, 0.9);
+		}
+
+		#navbar-breadcrumbs a,
+		#navbar-breadcrumbs .breadcrumb-item {
+			color: rgba(255, 255, 255, 0.7);
+		}
+
+		.search-bar {
+			background: rgba(255, 255, 255, 0.12);
+			border: 1px solid rgba(255, 255, 255, 0.18);
+			border-radius: 10px;
+
+			input {
+				background: transparent;
+				color: #fff;
+				border: none;
+				&::placeholder {
+					color: rgba(255, 255, 255, 0.65);
+				}
+			}
+		}
+
+		.avatar {
+			border: 2px solid rgba(255, 255, 255, 0.45);
+		}
+	}
+
+	.layout-side-section {
+		display: none !important;
+	}
+}
+
+/* Module pages — bisonstechs shell: fixed full-height sidebar + white top bar */
+body.onerp-module-route {
+	--onrp-rail-width: 256px;
+	padding-left: var(--onrp-rail-width) !important;
+
+	/* White header sits to the RIGHT of the fixed rail */
+	header.navbar {
+		position: sticky;
+		top: 0;
+		z-index: 1020;
+		margin-left: 0 !important;
+		width: 100% !important;
+		max-width: 100% !important;
+		background: #ffffff;
+		border-bottom: 1px solid var(--onrp-border);
+
+		.navbar-home .onerp-brand-logo {
+			border-color: var(--onrp-border);
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+		}
+
+		.nav-link,
+		.btn-reset,
+		.notifications-icon,
+		a {
+			color: var(--onrp-text);
+		}
+
+		#navbar-breadcrumbs a,
+		#navbar-breadcrumbs .breadcrumb-item {
+			color: var(--onrp-text-muted);
+		}
+
+		.search-bar {
+			background: var(--onrp-icon-tile);
+			border: 1px solid var(--onrp-border);
+			border-radius: 10px;
+
+			input {
+				background: transparent;
+				color: var(--onrp-text);
+				border: none;
+			}
+		}
+
+		.avatar {
+			border: 2px solid var(--onrp-border);
+		}
+	}
+
+	/* Fixed left rail like bisonstechs (full viewport height) */
+	.layout-side-section,
+	[data-page-route="Workspaces"] .layout-side-section {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		bottom: 0 !important;
+		z-index: 1030 !important;
+		height: 100vh !important;
+		max-height: 100vh !important;
+		min-height: 100vh !important;
+		width: var(--onrp-rail-width) !important;
+		max-width: var(--onrp-rail-width) !important;
+		flex: 0 0 var(--onrp-rail-width) !important;
+		padding: 0 !important;
+		margin: 0 !important;
+		border-radius: 0 !important;
+		overflow: hidden !important;
+		background: var(--onrp-sidebar-bg) !important;
+		box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+	}
+
+	/* Kill Frappe mobile overlay slide-off so the fixed rail stays usable
+	   below 991px (Bootstrap hidden-xs/sm + overlay translateX(-110%)). */
+	.layout-side-section .list-sidebar,
+	.layout-side-section .overlay-sidebar,
+	.layout-side-section .desk-sidebar,
+	.layout-side-section .list-sidebar.overlay-sidebar,
+	.layout-side-section .list-sidebar.hidden-xs,
+	.layout-side-section .list-sidebar.hidden-sm {
+		position: static !important;
+		top: auto !important;
+		left: auto !important;
+		right: auto !important;
+		bottom: auto !important;
+		transform: none !important;
+		width: 100% !important;
+		max-width: 100% !important;
+		height: 100% !important;
+		min-height: 100% !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		display: block !important;
+		box-shadow: none !important;
+		background: transparent !important;
+		overflow: hidden !important;
+		z-index: auto !important;
+	}
+
+	.onerp-sidebar {
+		width: 100% !important;
+		max-width: 100% !important;
+		height: 100vh !important;
+		min-height: 100vh !important;
+	}
+
+	/* Forms hide .layout-side-section for new docs — keep onerp rail visible */
+	.layout-side-section.onerp-host,
+	.layout-side-section.hide-sidebar.onerp-host {
+		display: block !important;
+	}
+
+	.layout-side-section.onerp-host .form-sidebar {
+		display: none !important;
+	}
+
+	/* Content row fills remaining width (sidebar is out of flow) */
+	.layout-main-section-wrapper {
+		width: 100% !important;
+		max-width: 100% !important;
+		flex: 1 1 auto !important;
+		padding-left: 0 !important;
+	}
+
+	.container.page-body,
+	.page-container,
+	div[data-page-container] > .row {
+		max-width: 100% !important;
+		margin-left: 0 !important;
+		margin-right: 0 !important;
+	}
+
+	/* Soften default workspace chrome */
+	.page-head .page-head-content .page-actions .btn:not(.primary-action) {
+		border-radius: 10px;
+	}
+
+	&.onerp-sidebar-collapsed {
+		--onrp-rail-width: 72px;
+
+		.layout-side-section {
+			.onerp-sidebar-brand-text,
+			.onerp-sidebar-label,
+			.onerp-sidebar-item span,
+			.onerp-sidebar-group-toggle span,
+			.onerp-sidebar-help,
+			.onerp-sidebar-logout span {
+				display: none;
+			}
+
+			.onerp-sidebar-brand {
+				justify-content: center;
+				padding: 12px 8px;
+			}
+
+			.onerp-sidebar-item,
+			.onerp-sidebar-group-toggle {
+				justify-content: center;
+				padding-left: 10px;
+				padding-right: 10px;
+			}
+		}
+	}
+}
+
+// ---------------------------------------------------------------
+// Workspace page: layout shell
+// ---------------------------------------------------------------
+.desk-page {
+	background-color: var(--onrp-canvas);
+}
+
+// ---------------------------------------------------------------
+// Home Dashboard — bisonstechs module cards (your colours)
+// ---------------------------------------------------------------
+.onerp-home {
+	max-width: 1180px;
+	margin: 0 auto;
+	padding: 8px 24px 80px;
+
+	.onerp-home-topbar {
+		background: #fff;
+		border: 1px solid var(--onrp-border);
+		border-radius: 16px;
+		padding: 18px 22px 16px;
+		margin-bottom: 22px;
+		box-shadow: var(--onrp-shadow-card);
+	}
+
+	.onerp-home-breadcrumb {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		color: var(--onrp-text-muted);
+		font-size: 13px;
+		margin-bottom: 8px;
+	}
+
+	.onerp-home-heading {
+		font-size: 26px;
+		font-weight: 700;
+		color: var(--onrp-text);
+		margin: 0 0 4px;
+		letter-spacing: -0.02em;
+	}
+
+	.onerp-home-subtitle {
+		color: var(--onrp-text-muted);
+		font-size: 14px;
+		margin: 0;
+	}
+
+	.onerp-modules-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 18px;
+	}
+}
+
+.onerp-module-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	text-align: center;
+	background: var(--onrp-surface);
+	border: 1px solid var(--onrp-border);
+	border-radius: 18px;
+	box-shadow: var(--onrp-shadow-card);
+	padding: 28px 18px 22px;
+	color: var(--onrp-text);
+	text-decoration: none;
+	cursor: pointer;
+	min-height: 210px;
+	transition: box-shadow 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
+
+	&:hover,
+	&:focus {
+		box-shadow: var(--onrp-shadow-card-hover);
+		border-color: color-mix(in srgb, var(--theme-brand) 35%, var(--onrp-border));
+		transform: translateY(-3px);
+		color: var(--onrp-text);
+		text-decoration: none;
+	}
+
+	.onerp-module-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 72px;
+		height: 72px;
+		border-radius: 18px;
+		background: var(--onrp-icon-tile);
+		border: 1px solid var(--onrp-border);
+
+		svg {
+			width: 32px;
+			height: 32px;
+		}
+	}
+
+	.onerp-module-title {
+		font-size: 16px;
+		font-weight: 700;
+		color: var(--onrp-text);
+	}
+
+	.onerp-module-desc {
+		font-size: 13px;
+		color: var(--onrp-text-muted);
+		line-height: 1.45;
+		min-height: 38px;
+	}
+
+	.onerp-module-open {
+		margin-top: auto;
+		font-size: 13px;
+		font-weight: 700;
+		color: var(--onrp-primary);
+	}
+}
+
+// ---------------------------------------------------------------
+// Module sidebars — bisonstechs layout, login navy + orange active
+// ---------------------------------------------------------------
+.list-sidebar,
+.layout-side-section,
+.desk-sidebar {
+	background: var(--onrp-sidebar-bg) !important;
+	border-right: none;
+	color: var(--onrp-sidebar-fg);
+}
+
+.onerp-sidebar {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 100%;
+	background: var(--onrp-sidebar-bg);
+	color: #fff;
+
+	.onerp-sidebar-toolbar {
+		display: flex;
+		justify-content: flex-end;
+		padding: 8px 10px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	}
+
+	.onerp-sidebar-collapse {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 34px;
+		height: 34px;
+		border-radius: 10px;
+		color: rgba(255, 255, 255, 0.65);
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.1);
+			color: #fff;
+		}
+
+		svg {
+			--icon-stroke: currentColor;
+		}
+	}
+
+	.onerp-sidebar-brand {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 22px 20px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		text-decoration: none;
+		color: #fff;
+		flex-shrink: 0;
+		transition: background 0.15s ease;
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.05);
+			color: #fff;
+			text-decoration: none;
+		}
+	}
+
+	.onerp-sidebar-brand-mark {
+		width: 40px;
+		height: 40px;
+		border-radius: 12px;
+		background: #fff;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		color: var(--onrp-sidebar-bg);
+
+		svg {
+			--icon-stroke: var(--theme-navy);
+		}
+	}
+
+	.onerp-sidebar-brand-name {
+		font-size: 14px;
+		font-weight: 800;
+		letter-spacing: 0.02em;
+		color: #fff;
+		line-height: 1.2;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.onerp-sidebar-brand-module {
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.5);
+		margin-top: 2px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.onerp-sidebar-scroll {
+		flex: 1;
+		overflow-y: auto;
+		padding: 16px 12px 18px;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.onerp-sidebar-label {
+		display: block;
+		padding: 4px 8px 12px;
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.3);
+	}
+
+	.onerp-sidebar-divider {
+		height: 1px;
+		background: rgba(255, 255, 255, 0.1);
+		margin: 12px 8px;
+	}
+
+	.onerp-sidebar-group {
+		.onerp-sidebar-group-toggle {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			width: 100%;
+			padding: 10px 12px;
+			border: none;
+			background: transparent;
+			border-radius: 10px;
+			font-size: 13px;
+			font-weight: 600;
+			color: rgba(255, 255, 255, 0.9);
+			text-align: left;
+
+			&:hover {
+				background: rgba(255, 255, 255, 0.06);
+			}
+
+			.onerp-sidebar-group-name {
+				flex: 1;
+				min-width: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				text-align: left;
+			}
+
+			svg {
+				--icon-stroke: rgba(255, 255, 255, 0.45);
+				width: 14px;
+				height: 14px;
+				transition: transform 0.15s ease;
+			}
+		}
+
+		&.collapsed {
+			.onerp-sidebar-group-toggle > svg:last-child {
+				transform: rotate(-90deg);
+			}
+
+			.onerp-sidebar-group-items {
+				display: none;
+			}
+		}
+	}
+
+	.onerp-sidebar-group-items {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: 2px 0 6px 8px;
+	}
+
+	.onerp-sidebar-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 8px 12px;
+		border-radius: 8px;
+		font-size: 13.5px;
+		color: rgba(255, 255, 255, 0.7);
+		text-decoration: none;
+		transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+		span {
+			flex: 1;
+			min-width: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		svg {
+			width: 15px;
+			height: 15px;
+			flex-shrink: 0;
+			--icon-stroke: rgba(255, 255, 255, 0.55);
+		}
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.06);
+			color: #fff;
+			text-decoration: none;
+
+			svg {
+				--icon-stroke: #fff;
+			}
+		}
+
+		&.active {
+			background: var(--theme-brand);
+			color: #fff;
+			font-weight: 600;
+			box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-brand) 40%, transparent);
+
+			svg {
+				--icon-stroke: #fff;
+			}
+		}
+	}
+
+	.onerp-sidebar-footer {
+		margin-top: auto;
+		padding: 12px 12px 16px;
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.onerp-sidebar-help {
+		display: flex;
+		gap: 10px;
+		align-items: flex-start;
+		padding: 12px;
+		border-radius: 14px;
+		background: color-mix(in srgb, var(--theme-brand) 14%, transparent);
+		border: 1px solid color-mix(in srgb, var(--theme-brand) 28%, transparent);
+	}
+
+	.onerp-sidebar-help-icon {
+		width: 28px;
+		height: 28px;
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.1);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+
+		svg {
+			--icon-stroke: #fff;
+		}
+	}
+
+	.onerp-sidebar-help-title {
+		font-size: 13px;
+		font-weight: 700;
+		color: #fff;
+	}
+
+	.onerp-sidebar-help-sub {
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.55);
+		margin-top: 2px;
+	}
+
+	.onerp-sidebar-logout {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		padding: 10px 12px;
+		border-radius: 10px;
+		color: rgba(255, 255, 255, 0.75);
+		text-decoration: none;
+		font-size: 13.5px;
+		font-weight: 600;
+
+		span {
+			flex: 1;
+			min-width: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		svg {
+			--icon-stroke: rgba(255, 255, 255, 0.7);
+		}
+
+		&:hover {
+			background: rgba(255, 255, 255, 0.06);
+			color: #fff;
+			text-decoration: none;
+		}
+	}
+}
+
+// ---------------------------------------------------------------
+// List pages — module sidebar host + filter widget in top bar
+// ---------------------------------------------------------------
+.list-sidebar.onerp-host {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 100%;
+
+	> .onerp-sidebar {
+		flex: 1;
+	}
+}
+
+.onerp-filter-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 18px;
+	flex: 1 0 100%;
+	width: 100%;
+	padding: 8px 2px 2px;
+	margin-top: 6px;
+	border-top: 1px solid var(--onrp-border);
+
+	.sidebar-section {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+		margin-bottom: 0;
+
+		> .sidebar-label {
+			display: inline-block;
+			margin: 0;
+			padding: 0;
+			font-size: 10px;
+			font-weight: 700;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+			color: var(--onrp-text-muted);
+		}
+	}
+
+	.list-group-by {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+
+	.list-group-by-fields {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		flex-wrap: wrap;
+
+		.group-by-field.list-link {
+			margin: 0;
+		}
+	}
+
+	.group-by-field,
+	.list-stats {
+		.list-sidebar-button {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 4px 10px;
+			border: 1px solid var(--onrp-border);
+			border-radius: 999px;
+			background: var(--onrp-surface);
+			color: var(--onrp-text);
+			font-size: 12px;
+
+			&:hover {
+				text-decoration: none;
+				border-color: var(--theme-brand);
+				color: var(--theme-brand);
+			}
+		}
+	}
+
+	.add-list-group-by.sidebar-action,
+	.show-tags.sidebar-action {
+		margin: 0;
+
+		a {
+			color: var(--theme-brand);
+			font-size: 12px;
+			font-weight: 600;
+
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+	}
+
+	.list-tags {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin: 0;
+	}
+
+	.list-stats.list-link {
+		margin: 0;
+	}
+
+	.list-filters {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+		margin: 0;
+
+		.filter-pill {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 4px 10px;
+			border: 1px solid var(--onrp-border);
+			border-radius: 999px;
+			background: var(--onrp-surface);
+			font-size: 12px;
+			color: var(--onrp-text);
+		}
+	}
+}
+
+// ---------------------------------------------------------------
+// Workspace content cards (module dashboards) — premium polish
+// ---------------------------------------------------------------
+.desk-page .widget {
+	background: var(--onrp-surface);
+	border: 1px solid var(--onrp-border);
+	border-radius: var(--onrp-radius-lg);
+	box-shadow: var(--onrp-shadow-card);
+
+	.widget-group-head {
+		.group-title {
+			font-size: 14px;
+			font-weight: 600;
+			color: var(--onrp-text);
+		}
+	}
+
+	.widget-links {
+		.widget-link,
+		a {
+			border-radius: 10px;
+			transition: background 0.15s ease;
+
+			&:hover {
+				background: var(--onrp-icon-tile);
+			}
+		}
+
+		.link-content {
+			.link-bold {
+				font-weight: 600;
+				color: var(--onrp-text);
+			}
+
+			.link-small {
+				color: var(--onrp-text-muted);
+			}
+		}
+	}
+
+	&.number-widget {
+		.widget-head,
+		.widget-body {
+			background: var(--onrp-surface);
+		}
+	}
+}
+
+// Workspace page heading area
+.desk-page .layout-main-section {
+	.page-head {
+		.title-text {
+			font-weight: 700;
+		}
+	}
+}
+
+// Buttons follow the brand color consistently
+.btn-primary {
+	background-color: var(--onrp-primary);
+	border-color: var(--onrp-primary);
+	color: #ffffff;
+
+	&:hover,
+	&:focus {
+		background-color: var(--onrp-primary-hover);
+		border-color: var(--onrp-primary-hover);
+		color: #ffffff;
+	}
+}
+
+// Mobile: keep module grid usable on small screens
+@media (max-width: 767px) {
+	.onerp-home {
+		padding: 18px 14px 60px;
+
+		.onerp-modules-grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 12px;
+		}
+	}
+
+	.onerp-module-card {
+		padding: 20px 10px;
+
+		.onerp-module-icon {
+			width: 64px;
+			height: 64px;
+			border-radius: 16px;
+
+			.icon {
+				width: 28px;
+				height: 28px;
+			}
+		}
+	}
+}

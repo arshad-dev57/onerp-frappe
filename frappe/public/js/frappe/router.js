@@ -479,17 +479,18 @@ frappe.router = {
 		}
 
 		// Resolution order
-		// 1. User's default workspace in user doctype
-		// 2. Private home
-		// 3. Public home
-		// 4. First workspace in list
+		// 1. Onerp home dashboard
+		// 2. User's default workspace in user doctype
+		// 3. Private home
+		// 4. Public home
+		// 5. First workspace in list
 		let private_home = `home-${frappe.user.name.toLowerCase()}`;
 		let default_workspace = frappe.router.slug(frappe.boot.user.default_workspace?.name || "");
 
 		let workspace =
+			frappe.workspaces["home"] ||
 			frappe.workspaces[default_workspace] ||
 			frappe.workspaces[private_home] ||
-			frappe.workspaces["home"] ||
 			Object.values(frappe.workspaces)[0];
 
 		if (workspace) {

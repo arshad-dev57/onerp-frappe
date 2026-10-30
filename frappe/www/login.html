@@ -1,239 +1,291 @@
 {% extends "templates/web.html" %}
 
-{% macro email_login_body() -%}
-{% if not disable_user_pass_login or (ldap_settings and ldap_settings.enabled) %}
-<div class="page-card-body">
-	<div class="form-group">
-		<label class="form-label sr-only" for="login_email">{{ login_label or _("Email")}}</label>
-		<div class="email-field">
-			<input type="text" id="login_email" class="form-control"
-				placeholder="{% if login_name_placeholder %}{{ login_name_placeholder  }}{% else %}{{ _('jane@example.com') }}{% endif %}"
-				required autofocus autocomplete="username">
-
-			<svg class="field-icon email-icon" width="16" height="16" viewBox="0 0 16 16" fill="none"
-				xmlns="http://www.w3.org/2000/svg">
-				<use class="es-lock" href="#es-line-email"></use>
-			</svg>
-		</div>
-	</div>
-
-	<div class="form-group">
-		<label class="form-label sr-only" for="login_password">{{ _("Password") }}</label>
-		<div class="password-field">
-			<input type="password" id="login_password" class="form-control" placeholder="•••••"
-				autocomplete="current-password" required>
-
-			<svg class="field-icon password-icon" width="16" height="16" viewBox="0 0 16 16" fill="none"
-				xmlns="http://www.w3.org/2000/svg">
-					<use class="es-lock" href="#es-line-lock"></use>
-			</svg>
-			<span toggle="#login_password" class="toggle-password text-muted">{{ _('Show') }}</span>
-		</div>
-	</div>
-
-	{% if not disable_user_pass_login %}
-	<p class="forgot-password-message">
-		<a href="#forgot">{{ _("Forgot Password?") }}</a>
-	</p>
-	{% endif %}
-</div>
-{% endif %}
-<div class="page-card-actions">
-	{% if not disable_user_pass_login %}
-	<button class="btn btn-sm btn-primary btn-block btn-login" type="submit">
-		{{ _("Login") }}</button>
-	{% endif %}
-	{% if ldap_settings and ldap_settings.enabled %}
-	<button class="btn btn-sm {{ "btn-primary" if disable_user_pass_login else "btn-default" }} btn-block btn-login btn-ldap-login">
-		{{ _("Login with LDAP") }}</button>
-	{% endif %}
-</div>
-{% endmacro %}
-
 {% block head_include %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 {{ include_style('login.bundle.css') }}
 {% endblock %}
 
-{% macro logo_section(title=null) %}
-<div class="page-card-head">
-	<img class="app-logo" src="{{ logo }}">
-	{% if title %}
-	<h4>{{ _(title)}}</h4>
-	{% else %}
-	<h4>{{ _('Login to {0}').format(app_name or _("Frappe")) }}</h4>
-	{% endif %}
+{# Hide default website navbar on the login page #}
+{% block navbar %}{% endblock %}
+
+{% macro logo_section() %}
+<div class="auth-logo">
+	<img class="app-logo" src="/assets/frappe/images/onerp-logo.png" alt="Onerp">
 </div>
 {% endmacro %}
 
 {% block page_content %}
-<!-- {{ for_test }} -->
-<div>
-	<noscript>
-		<div class="text-center my-5">
-			<h4>{{ _("Javascript is disabled on your browser") }}</h4>
-			<p class="text-muted">
-				{{ _("You need to enable JavaScript for your app to work.") }}<br>{{ _("To enable it follow the instructions in the following link: {0}").format("<a href='https://enable-javascript.com/'>enable-javascript.com</a></p>") }}
-		</div>
-	</noscript>
-	<section class='for-login'>
+<div class="auth-wrapper">
+
+	<!-- ============ LEFT PANEL ============ -->
+	<div class="auth-left">
 		{{ logo_section() }}
-		<div class="login-content page-card">
-			<form class="form-signin form-login" role="form">
-				{%- if social_login or login_with_email_link -%}
-				<div class="page-card-body">
+
+		<div class="auth-form-area">
+			<noscript>
+				<div class="text-center my-5">
+					<h4>{{ _("Javascript is disabled on your browser") }}</h4>
+					<p class="text-muted">{{ _("You need to enable JavaScript for your app to work.") }}</p>
+				</div>
+			</noscript>
+
+			<!-- ---------- LOGIN (email + password) ---------- -->
+			<section class="for-login">
+				<div class="login-content page-card">
+					<div class="auth-heading">
+						<h1>{{ _("Welcome back") }}</h1>
+						<p>{{ _("Sign in with your email and password") }}</p>
+					</div>
+
+					{% if provider_logins %}
+					<div class="social-login-buttons">
+						{% for provider in provider_logins %}
+						<a href="{{ provider.auth_url }}"
+							class="btn-login-option btn-{{ provider.name }}">
+							{% if provider.icon %}{{ provider.icon }}{% endif %}
+							<span>{{ provider.provider_name }}</span>
+						</a>
+						{% endfor %}
+					</div>
+					<div class="login-divider"><span>{{ _("OR") }}</span></div>
+					{% endif %}
+
 					<form class="form-signin form-login" role="form">
-						{{ email_login_body() }}
+						<div class="page-card-body">
+							<div class="form-group">
+								<label class="form-label" for="login_email">{{ _("Email") }}</label>
+								<input type="email" id="login_email" class="form-control"
+									placeholder="{{ _('you@company.com') }}" required autofocus
+									autocomplete="username">
+							</div>
+							<div class="form-group mt-3">
+								<label class="form-label" for="login_password">{{ _("Password") }}</label>
+								<div class="password-field">
+									<input type="password" id="login_password" class="form-control"
+										placeholder="••••••••" required autocomplete="current-password">
+									<button type="button" class="toggle-password" toggle="#login_password"
+										aria-label="{{ _('Show password') }}">{{ _("Show") }}</button>
+								</div>
+							</div>
+							<p class="forgot-password-message">
+								<a href="#forgot">{{ _("Forgot Password?") }}</a>
+							</p>
+						</div>
+						<div class="page-card-actions">
+							<button class="btn btn-primary btn-block btn-login" type="submit">
+								{{ _("Log in") }}</button>
+						</div>
 					</form>
-					<div class="social-logins text-center">
-						{% if not disable_user_pass_login or (ldap_settings and ldap_settings.enabled) %}
-						<p class="text-muted login-divider">{{ _("or") }}</p>
-						{% endif %}
-						<div class="social-login-buttons">
-							{% for provider in provider_logins %}
-							<div class="login-button-wrapper">
-								<a href="{{ provider.auth_url }}"
-									class="btn btn-block btn-default btn-sm btn-login-option btn-{{ provider.name }}">
-									{% if provider.icon %}
-										{{ provider.icon }}
-									{% endif %}
-									{{ _("Login with {0}").format(provider.provider_name) }}</a>
-							</div>
-							{% endfor %}
-						</div>
 
-						{% if login_with_frappe_cloud_url %}
-						<div class="social-login-buttons">
-							<div class="login-button-wrapper">
-								<a href="{{ login_with_frappe_cloud_url }}"
-									class="btn btn-block btn-default btn-sm btn-login-option btn-login-with-frappe-cloud">
-									<svg class="mr-2" width="24" height="20" viewBox="0 5 23 23" fill="none"
-										xmlns="http://www.w3.org/2000/svg">
-										<path
-											d="M24.5011 14.1124C23.3954 12.4873 21.532 11.5477 19.594 11.6747C18.7616 10.1384 17.2211 9.12267 15.4198 9.0084C14.1651 8.93222 12.8979 9.3766 11.9165 10.24C11.2456 10.8367 10.7611 11.5223 10.463 12.2968C10.289 12.7539 9.89151 13.0459 9.46912 13.0459H6.5V15.5852H9.46912C10.9226 15.5852 12.2271 14.6584 12.7737 13.2237C12.9227 12.8301 13.1712 12.4873 13.5439 12.1571C14.0284 11.7255 14.662 11.4969 15.2583 11.535C16.1528 11.5985 16.7863 12.0175 17.1839 12.538C17.6063 13.0205 17.8423 13.7696 17.979 14.5187C18.774 14.2902 19.6437 14.0997 20.476 14.2394C21.1593 14.3536 21.7929 14.7218 22.2525 15.2678C22.327 15.3567 22.4016 15.4456 22.4637 15.5471C23.06 16.4232 23.1718 17.5024 22.7743 18.5689C22.414 19.5592 21.0847 20.4607 19.9791 20.4607H11.3326C10.1524 20.4607 9.18339 19.5592 9.03432 18.4038H6.54969C6.71119 20.9686 8.78585 23 11.3326 23H19.9915C22.1283 23 24.3769 21.451 25.1098 19.4704C25.7931 17.6167 25.5695 15.6614 24.5135 14.0997L24.5011 14.1124Z"
-											fill="currentColor" />
-									</svg>
-									{{ _("Login with Frappe Cloud") }}</a>
-							</div>
-						</div>
-						{% endif %}
-
-						{% if login_with_email_link %}
-						<div class="login-with-email-link social-login-buttons">
-							<div class="login-button-wrapper">
-								<a href="#login-with-email-link"
-									class="btn btn-block btn-default btn-sm btn-login-option btn-login-with-email-link">
-									{{ _("Login with Email Link") }}</a>
-							</div>
-						</div>
-						{% endif %}
-					</div>
+					{% if not disable_signup %}
+					<p class="auth-switch">
+						{{ _("Don't have an account?") }}
+						<a href="#signup">{{ _("Register your company") }}</a>
+					</p>
+					{% endif %}
 				</div>
-				{% else %}
-					{{ email_login_body() }}
-				{%- endif -%}
-			</form>
-		</div>
-		{%- if not disable_signup and not disable_user_pass_login -%}
-		<div class="text-center sign-up-message">
-			{{ _("Don't have an account?") }}
-			<a href="#signup">{{ _("Sign up") }}</a>
-		</div>
-		{%- endif -%}
-	</section>
+			</section>
 
-	{%- if social_login -%}
-	<section class='for-email-login'>
-		{{ logo_section() }}
-		<div class="login-content page-card">
-			<form class="form-signin form-login" role="form">
-			{{ email_login_body() }}
-			</form>
-		</div>
-		{%- if not disable_signup and not disable_user_pass_login -%}
-		<div class="text-center sign-up-message">
-			{{ _("Don't have an account?") }}
-			<a href="#signup">{{ _("Sign up") }}</a>
-		</div>
-		{%- endif -%}
-	</section>
-	{%- endif -%}
-	<section class='for-signup {{ "signup-disabled" if disable_signup else "" }}'>
-		{{ logo_section(_('Create a {0} Account').format(app_name or _("Frappe"))) }}
-		<div class="login-content page-card">
-			{%- if not disable_signup -%}
-			{{ signup_form_template }}
-			{%- else -%}
-			<div class='page-card-head mb-2'>
-				<span class='indicator gray'>{{_("Signup Disabled")}}</span>
-				<p class="text-muted text-normal sign-up-message mt-1 mb-8">{{_("Signups have been disabled for this website.")}}</p>
-				<div><a href='/' class='btn btn-primary btn-md'>{{ _("Home") }}</a></div>
-			</div>
-			{%- endif -%}
-		</div>
-
-	</section>
-
-	<section class='for-forgot'>
-		{{ logo_section('Forgot Password') }}
-		<div class="login-content page-card">
-			<form class="form-signin form-forgot hide" role="form">
-				<div class="page-card-body">
-					<div class="email-field">
-						<input type="email" id="forgot_email" class="form-control"
-							placeholder="{{ _('Email Address') }}" required autofocus autocomplete="username">
-						<svg class="field-icon email-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"
-							xmlns="http://www.w3.org/2000/svg">
-							<path
-								d="M2.5 7.65149V15.0757C2.5 15.4374 2.64367 15.7842 2.8994 16.04C3.15513 16.2957 3.50198 16.4394 3.86364 16.4394H16.1364C16.498 16.4394 16.8449 16.2957 17.1006 16.04C17.3563 15.7842 17.5 15.4374 17.5 15.0757V7.65149"
-								stroke="#74808B" stroke-miterlimit="10" stroke-linecap="square" />
-							<path
-								d="M17.5 7.57572V5.53026C17.5 5.1686 17.3563 4.82176 17.1006 4.56603C16.8449 4.31029 16.498 4.16663 16.1364 4.16663H3.86364C3.50198 4.16663 3.15513 4.31029 2.8994 4.56603C2.64367 4.82176 2.5 5.1686 2.5 5.53026V7.57572L10 10.8333L17.5 7.57572Z"
-								stroke="#74808B" stroke-miterlimit="10" stroke-linecap="square" />
-						</svg>
-
+			<!-- ---------- SIGNUP (multi-step company registration) ---------- -->
+			<section class='for-signup {{ "signup-disabled" if disable_signup else "" }}'>
+				<div class="login-content page-card signup-wide">
+					{%- if not disable_signup -%}
+					<div class="auth-heading">
+						<h1>{{ _("Register your company") }}</h1>
+						<p class="signup-step-caption" data-step-caption>{{ _("Step 1 of 3 — Your details") }}</p>
 					</div>
+
+					<div class="signup-steps" aria-hidden="true">
+						<span class="signup-step is-active" data-step-dot="1">1</span>
+						<span class="signup-step-line"></span>
+						<span class="signup-step" data-step-dot="2">2</span>
+						<span class="signup-step-line"></span>
+						<span class="signup-step" data-step-dot="3">3</span>
+					</div>
+
+					<form class="form-signin form-signup-company" id="company-register-form" role="form" novalidate>
+						<!-- Step 1: Personal + company basics -->
+						<div class="signup-pane is-active" data-signup-step="1">
+							<div class="form-row-2">
+								<div class="form-group">
+									<label class="form-label" for="reg_first_name">{{ _("First name") }}</label>
+									<input type="text" id="reg_first_name" class="form-control"
+										placeholder="{{ _('Jane') }}" required autocomplete="given-name">
+								</div>
+								<div class="form-group">
+									<label class="form-label" for="reg_last_name">{{ _("Last name") }}</label>
+									<input type="text" id="reg_last_name" class="form-control"
+										placeholder="{{ _('Doe') }}" required autocomplete="family-name">
+								</div>
+							</div>
+							<div class="form-group mt-3">
+								<label class="form-label" for="reg_email">{{ _("Work email") }}</label>
+								<input type="email" id="reg_email" class="form-control"
+									placeholder="{{ _('you@company.com') }}" required autocomplete="email">
+							</div>
+							<div class="form-group mt-3">
+								<label class="form-label" for="reg_phone">{{ _("Phone") }}</label>
+								<input type="tel" id="reg_phone" class="form-control"
+									placeholder="{{ _('+1 555 000 0000') }}" autocomplete="tel">
+							</div>
+							<div class="form-group mt-3">
+								<label class="form-label" for="reg_company_name">{{ _("Company name") }}</label>
+								<input type="text" id="reg_company_name" class="form-control"
+									placeholder="{{ _('Acme Trading Ltd') }}" required autocomplete="organization">
+							</div>
+							<div class="form-row-2 mt-3">
+								<div class="form-group">
+									<label class="form-label" for="reg_country">{{ _("Country") }}</label>
+									<select id="reg_country" class="form-control" required>
+										<option value="">{{ _("Select country") }}</option>
+									</select>
+								</div>
+								<div class="form-group">
+									<label class="form-label" for="reg_currency">{{ _("Currency") }}</label>
+									<select id="reg_currency" class="form-control" required>
+										<option value="">{{ _("Select currency") }}</option>
+									</select>
+								</div>
+							</div>
+							<div class="page-card-actions">
+								<button type="button" class="btn btn-primary btn-block" data-signup-next>
+									{{ _("Continue") }}</button>
+							</div>
+						</div>
+
+						<!-- Step 2: Company details -->
+						<div class="signup-pane" data-signup-step="2">
+							<div class="form-group">
+								<label class="form-label" for="reg_domain">{{ _("Industry / Domain") }}</label>
+								<input type="text" id="reg_domain" class="form-control"
+									placeholder="{{ _('Retail, Manufacturing, Services…') }}">
+							</div>
+							<div class="form-group mt-3">
+								<label class="form-label" for="reg_tax_id">{{ _("Tax ID / VAT") }}</label>
+								<input type="text" id="reg_tax_id" class="form-control"
+									placeholder="{{ _('Optional') }}">
+							</div>
+							<div class="form-group mt-3">
+								<label class="form-label" for="reg_website">{{ _("Website") }}</label>
+								<input type="url" id="reg_website" class="form-control"
+									placeholder="https://">
+							</div>
+							<div class="form-group mt-3">
+								<label class="form-label" for="reg_company_phone">{{ _("Company phone") }}</label>
+								<input type="tel" id="reg_company_phone" class="form-control"
+									placeholder="{{ _('Optional — defaults to your phone') }}">
+							</div>
+							<div class="form-group mt-3">
+								<label class="form-label" for="reg_address">{{ _("Company address") }}</label>
+								<textarea id="reg_address" class="form-control" rows="3"
+									placeholder="{{ _('Street, city, postal code') }}"></textarea>
+							</div>
+							<div class="form-group mt-3">
+								<label class="form-label" for="reg_description">{{ _("About the company") }}</label>
+								<textarea id="reg_description" class="form-control" rows="3"
+									placeholder="{{ _('Short description (optional)') }}"></textarea>
+							</div>
+							<div class="page-card-actions signup-actions-row">
+								<button type="button" class="btn btn-secondary btn-block" data-signup-back>
+									{{ _("Back") }}</button>
+								<button type="button" class="btn btn-primary btn-block" data-signup-next>
+									{{ _("Continue") }}</button>
+							</div>
+						</div>
+
+						<!-- Step 3: Password -->
+						<div class="signup-pane" data-signup-step="3">
+							<div class="form-group">
+								<label class="form-label" for="reg_password">{{ _("Password") }}</label>
+								<div class="password-field">
+									<input type="password" id="reg_password" class="form-control"
+										placeholder="{{ _('At least 8 characters') }}" required
+										autocomplete="new-password">
+									<button type="button" class="toggle-password" toggle="#reg_password">
+										{{ _("Show") }}</button>
+								</div>
+							</div>
+							<div class="form-group mt-3">
+								<label class="form-label" for="reg_password_confirm">{{ _("Confirm password") }}</label>
+								<div class="password-field">
+									<input type="password" id="reg_password_confirm" class="form-control"
+										placeholder="••••••••" required autocomplete="new-password">
+									<button type="button" class="toggle-password" toggle="#reg_password_confirm">
+										{{ _("Show") }}</button>
+								</div>
+							</div>
+							<p class="signup-hint">
+								{{ _("Your account will be created as company admin and you will be signed in.") }}
+							</p>
+							<div class="page-card-actions signup-actions-row">
+								<button type="button" class="btn btn-secondary btn-block" data-signup-back>
+									{{ _("Back") }}</button>
+								<button type="submit" class="btn btn-primary btn-block btn-signup">
+									{{ _("Create account") }}</button>
+							</div>
+						</div>
+					</form>
+
+					<p class="auth-switch">
+						{{ _("Already have an account?") }}
+						<a href="#login">{{ _("Log in") }}</a>
+					</p>
+					{%- else -%}
+					<div class="auth-heading">
+						<h1>{{ _("Signup Disabled") }}</h1>
+						<p>{{ _("Signups have been disabled for this website.") }}</p>
+					</div>
+					<a href="#login" class="btn btn-primary btn-block">{{ _("Back to Login") }}</a>
+					{%- endif -%}
 				</div>
-				<div class="page-card-actions">
-					<button class="btn btn-sm btn-primary btn-block btn-forgot"
-						type="submit">{{ _("Reset Password") }}</button>
-					<p class="text-center sign-up-message">
+			</section>
+
+			<!-- ---------- FORGOT PASSWORD ---------- -->
+			<section class="for-forgot">
+				<div class="login-content page-card">
+					<div class="auth-heading">
+						<h1>{{ _("Forgot Password") }}</h1>
+						<p>{{ _("We'll email you a reset link") }}</p>
+					</div>
+					<form class="form-signin form-forgot" role="form">
+						<div class="page-card-body">
+							<div class="form-group">
+								<label class="form-label" for="forgot_email">{{ _("Email") }}</label>
+								<input type="email" id="forgot_email" class="form-control"
+									placeholder="{{ _('Type your email') }}" required autocomplete="username">
+							</div>
+						</div>
+						<div class="page-card-actions">
+							<button class="btn btn-primary btn-block btn-forgot" type="submit">
+								{{ _("Reset Password") }}</button>
+						</div>
+					</form>
+					<p class="auth-switch">
 						<a href="#login">{{ _("Back to Login") }}</a>
 					</p>
 				</div>
+			</section>
 
-			</form>
+			<!-- Kept so login.js routes don't break -->
+			<section class="for-email-login"></section>
+			<section class="for-login-with-email-link"></section>
 		</div>
-	</section>
 
-	<section class='for-login-with-email-link'>
-			{{ logo_section(_('Login with Email Link')) }}
-		<div class="login-content page-card">
-			<form class="form-signin form-login-with-email-link hide" role="form">
-				<div class="page-card-body">
-					<div class="email-field">
-						<input type="email" id="login_with_email_link_email" class="form-control"
-							placeholder="{{ _('Email Address') }}" required autofocus autocomplete="username">
-						<svg class="field-icon email-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"
-							xmlns="http://www.w3.org/2000/svg">
-							<path
-								d="M2.5 7.65149V15.0757C2.5 15.4374 2.64367 15.7842 2.8994 16.04C3.15513 16.2957 3.50198 16.4394 3.86364 16.4394H16.1364C16.498 16.4394 16.8449 16.2957 17.1006 16.04C17.3563 15.7842 17.5 15.4374 17.5 15.0757V7.65149"
-								stroke="#74808B" stroke-miterlimit="10" stroke-linecap="square" />
-							<path
-								d="M17.5 7.57572V5.53026C17.5 5.1686 17.3563 4.82176 17.1006 4.56603C16.8449 4.31029 16.498 4.16663 16.1364 4.16663H3.86364C3.50198 4.16663 3.15513 4.31029 2.8994 4.56603C2.64367 4.82176 2.5 5.1686 2.5 5.53026V7.57572L10 10.8333L17.5 7.57572Z"
-								stroke="#74808B" stroke-miterlimit="10" stroke-linecap="square" />
-						</svg>
-					</div>
-				</div>
-				<div class="page-card-actions">
-					<button class="btn btn-sm btn-primary btn-block btn-login-with-email-link"
-						type="submit">{{ _("Send login link") }}</button>
-					<p class="text-center sign-up-message">
-						<a href="#login">{{ _("Back to Login") }}</a>
-					</p>
-				</div>
-			</form>
+		<div class="auth-footer">
+			{{ _("By continuing you agree to our") }}
+			<a href="/terms">{{ _("Terms of use") }}</a> {{ _("and") }}
+			<a href="/privacy-policy">{{ _("Privacy Policy") }}</a>.
 		</div>
-	</section>
+	</div>
+
+	<!-- ============ RIGHT PANEL ============ -->
+	<div class="auth-right">
+		<h2>{{ _("Work smarter") }}<br>{{ _("NOT harder") }}</h2>
+		<p class="auth-right-sub">{{ _("Run accounting, inventory, sales and more — all in one place.") }}</p>
+	</div>
+
 </div>
 {% endblock %}
 

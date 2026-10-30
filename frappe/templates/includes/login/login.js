@@ -87,6 +87,8 @@ login.bind_events = function () {
 		}
 	});
 
+	login.bind_company_signup();
+
 	{% if ldap_settings and ldap_settings.enabled %}
 	$(".btn-ldap-login").on("click", function () {
 		var args = {};
@@ -163,7 +165,10 @@ login.login_with_email_link = function () {
 login.signup = function () {
 	login.reset_sections();
 	$(".for-signup").toggle(true);
-	$("#signup_fullname").focus();
+	login.signup_step = 1;
+	login.render_signup_step();
+	login.load_registration_options();
+	$("#reg_first_name").focus();
 }
 
 
@@ -286,6 +291,162 @@ login.login_handlers = (function () {
 
 	return login_handlers;
 })();
+
+/* ---------- Company registration (multi-step) ---------- */
+
+login.signup_step = 1;
+login.signup_options_loaded = false;
+
+login.signup_captions = {
+	1: {{ _("Step 1 of 3 — Your details") | tojson }},
+	2: {{ _("Step 2 of 3 — Company details") | tojson }},
+	3: {{ _("Step 3 of 3 — Set password") | tojson }},
+};
+
+login.bind_company_signup = function () {
+	$(document).on("click", "[data-signup-next]", function () {
+		if (!login.validate_signup_step(login.signup_step)) return;
+		login.signup_step = Math.min(3, login.signup_step + 1);
+		login.render_signup_step();
+	});
+
+	$(document).on("click", "[data-signup-back]", function () {
+		login.signup_step = Math.max(1, login.signup_step - 1);
+		login.render_signup_step();
+	});
+
+	$("#company-register-form").on("submit", function (event) {
+		event.preventDefault();
+		if (!login.validate_signup_step(3)) return;
+		login.submit_company_registration();
+		return false;
+	});
+};
+
+login.render_signup_step = function () {
+	$("[data-signup-step]").removeClass("is-active");
+	$('[data-signup-step="' + login.signup_step + '"]').addClass("is-active");
+
+	$("[data-step-dot]").removeClass("is-active is-done");
+	$("[data-step-dot]").each(function () {
+		var n = cint($(this).attr("data-step-dot"));
+		if (n < login.signup_step) $(this).addClass("is-done");
+		if (n === login.signup_step) $(this).addClass("is-active");
+	});
+
+	$("[data-step-caption]").text(login.signup_captions[login.signup_step] || "");
+
+	if (login.signup_step === 2 && !$("#reg_company_phone").val() && $("#reg_phone").val()) {
+		$("#reg_company_phone").val($("#reg_phone").val());
+	}
+};
+
+login.load_registration_options = function () {
+	if (login.signup_options_loaded || window.disable_signup) return;
+
+	frappe.call({
+		method: "erpnext.api.auth.get_registration_options",
+		type: "GET",
+		callback: function (r) {
+			var data = (r && r.message) || {};
+			var $country = $("#reg_country");
+			var $currency = $("#reg_currency");
+
+			(data.countries || []).forEach(function (name) {
+				$country.append($("<option>").val(name).text(name));
+			});
+
+			(data.currencies || []).forEach(function (c) {
+				var label = c.name + (c.currency_name ? " — " + c.currency_name : "");
+				$currency.append($("<option>").val(c.name).text(label));
+			});
+
+			if (!$currency.val() && data.currencies && data.currencies.length) {
+				var preferred = data.currencies.find(function (c) { return c.name === "PKR" || c.name === "USD"; });
+				if (preferred) $currency.val(preferred.name);
+			}
+
+			login.signup_options_loaded = true;
+		},
+		error: function (err) {
+			var msg = {{ _("Could not load countries/currencies. Is signup enabled?") | tojson }};
+			try {
+				if (err && err._server_messages) {
+					msg = JSON.parse(JSON.parse(err._server_messages)[0]).message || msg;
+				}
+			} catch (e) { /* ignore */ }
+			frappe.show_alert({ message: msg, indicator: "red" });
+		}
+	});
+};
+
+login.validate_signup_step = function (step) {
+	var show = function (msg) {
+		frappe.show_alert({ message: msg, indicator: "orange" });
+		return false;
+	};
+
+	if (step === 1) {
+		var first = ($("#reg_first_name").val() || "").trim();
+		var last = ($("#reg_last_name").val() || "").trim();
+		var email = ($("#reg_email").val() || "").trim();
+		var company = ($("#reg_company_name").val() || "").trim();
+		var country = ($("#reg_country").val() || "").trim();
+		var currency = ($("#reg_currency").val() || "").trim();
+
+		if (!first || !last) return show({{ _("Enter first and last name") | tojson }});
+		if (!email || !validate_email(email)) return show({{ _("Enter a valid email") | tojson }});
+		if (!company) return show({{ _("Enter company name") | tojson }});
+		if (!country) return show({{ _("Select a country") | tojson }});
+		if (!currency) return show({{ _("Select a currency") | tojson }});
+	}
+
+	if (step === 3) {
+		var pwd = $("#reg_password").val() || "";
+		var confirm = $("#reg_password_confirm").val() || "";
+		if (pwd.length < 8) return show({{ _("Password must be at least 8 characters") | tojson }});
+		if (pwd !== confirm) return show({{ _("Passwords do not match") | tojson }});
+	}
+
+	return true;
+};
+
+login.submit_company_registration = function () {
+	var $btn = $(".btn-signup");
+	var original = $btn.text();
+	$btn.prop("disabled", true).text({{ _("Creating account...") | tojson }});
+
+	frappe.call({
+		method: "erpnext.api.auth.register_company",
+		args: {
+			first_name: ($("#reg_first_name").val() || "").trim(),
+			last_name: ($("#reg_last_name").val() || "").trim(),
+			email: ($("#reg_email").val() || "").trim(),
+			phone: ($("#reg_phone").val() || "").trim(),
+			company_name: ($("#reg_company_name").val() || "").trim(),
+			country: ($("#reg_country").val() || "").trim(),
+			currency: ($("#reg_currency").val() || "").trim(),
+			password: $("#reg_password").val() || "",
+			company_address: ($("#reg_address").val() || "").trim(),
+			tax_id: ($("#reg_tax_id").val() || "").trim(),
+			website: ($("#reg_website").val() || "").trim(),
+			company_phone: ($("#reg_company_phone").val() || "").trim(),
+			company_description: ($("#reg_description").val() || "").trim(),
+			domain: ($("#reg_domain").val() || "").trim(),
+		},
+		freeze: true,
+		freeze_message: {{ _("Setting up your company...") | tojson }},
+		callback: function (r) {
+			var data = (r && r.message) || {};
+			$btn.prop("disabled", false).text({{ _("Success") | tojson }});
+			document.body.innerHTML = `{% include "templates/includes/splash_screen.html" %}`;
+			window.location.href = data.home_page || "/app";
+		},
+		error: function () {
+			$btn.prop("disabled", false).text(original);
+		}
+	});
+};
 
 frappe.ready(function () {
 

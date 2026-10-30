@@ -4,6 +4,10 @@
 @import "~frappe-charts/dist/frappe-charts.min";
 @import "~plyr/dist/plyr";
 @import "./desk/index";
+/* Login + desk share the same tokens */
+@import "./brand_theme";
+@import "./desk/onerp";
+
 
 @import "frappe/public/js/lib/leaflet/leaflet.css";
 @import "frappe/public/js/lib/leaflet_easy_button/easy-button.css";

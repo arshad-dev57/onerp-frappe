@@ -14,19 +14,15 @@ frappe.ui.misc.about = function () {
 				<p>
 					<i class='fa fa-globe fa-fw'></i>
 					${__("Website")}:
-					<a href='https://frappe.io/' target='_blank'>https://frappe.io/</a>
+					<a href='https://frappe.io/' target='_blank'>https://bisonstechs.com/</a>
 				</p>
 
-				<p>
-					<i class='fa fa-github fa-fw'></i>
-					${__("Source Code")}:
-					<a href='https://github.com/frappe' target='_blank'>https://github.com/frappe</a>
-				</p>
+				
 
 				<p>
 					<i class='fa fa-file-text fa-fw'></i>
 					${__("Frappe Blog")}:
-					<a href='https://frappe.io/blog' target='_blank'>https://frappe.io/blog</a>
+					<a href='https://bisonstechs.com/blog' target='_blank'>https://bisonstechs.com/blog</a>
 				</p>
 
 				<p>
@@ -35,11 +31,7 @@ frappe.ui.misc.about = function () {
 					<a href='https://discuss.frappe.io' target='_blank'>https://discuss.frappe.io</a>
 				</p>
 
-				<p>
-					<i class='fa fa-linkedin fa-fw'></i>
-					${__("LinkedIn")}:
-					<a href='https://linkedin.com/company/frappe-tech' target='_blank'>https://linkedin.com/company/frappe-tech</a>
-				</p>
+				
 
 				<p>
 					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" fill="currentColor" class="bi bi-twitter-x" viewBox="0 0 18 16">

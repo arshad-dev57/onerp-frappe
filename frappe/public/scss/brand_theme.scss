@@ -1,0 +1,48 @@
+/* =========================================================
+   Brand theme (single source of truth)
+
+   Change colours HERE — login, sidebar, and home all follow.
+   After editing: rebuild assets (bench build / yarn esbuild)
+   ========================================================= */
+
+:root {
+	/* Primary brand (buttons, accents, tiles) */
+	--theme-brand: #e8643a;
+	--theme-brand-dark: #d9552b;
+	--theme-brand-soft: #f09a78;
+
+	/* Dark surfaces (login right panel + desk sidebar) */
+	--theme-navy: #16232f;
+	--theme-navy-soft: #3a5167;
+
+	/* Text & UI */
+	--theme-text: #2b2b2b;
+	--theme-muted: #5b6470;
+	--theme-border: #e6e8eb;
+	--theme-bg: #f6f7f9;
+	--theme-link: #4a5de0;
+
+	/* Sidebar (derived from navy so it matches login) */
+	--theme-sidebar-bg: var(--theme-navy);
+	--theme-sidebar-fg: #ffffff;
+	--theme-sidebar-muted: rgba(255, 255, 255, 0.7);
+	--theme-sidebar-hover: rgba(255, 255, 255, 0.12);
+	--theme-sidebar-selected: rgba(255, 255, 255, 0.18);
+
+	/* Shape */
+	--theme-radius: 18px;
+	--theme-radius-sm: 12px;
+
+	/* Font */
+	--theme-font: "Plus Jakarta Sans", -apple-system, "Segoe UI", sans-serif;
+
+	/* Home workspace aliases (keep for existing home CSS) */
+	--hw-brand: var(--theme-brand);
+	--hw-brand-dark: var(--theme-brand-dark);
+	--hw-navy: var(--theme-navy);
+	--hw-text: var(--theme-text);
+	--hw-muted: var(--theme-muted);
+	--hw-border: var(--theme-border);
+	--hw-bg: var(--theme-bg);
+	--hw-radius: var(--theme-radius);
+}
