@@ -104,6 +104,24 @@ const ONERP_MODULES = {
 	},
 };
 
+// Permission level 1 already hides roles/modules/API keys for a tenant; these are the
+// permlevel-0 account controls a tenant must not toggle on themselves -- disabling your
+// own user or changing session/IP limits is an admin action, not a profile edit.
+const ONERP_PROFILE_LOCKED_FIELDS = [
+	"enabled",
+	"send_welcome_email",
+	"simultaneous_sessions",
+	"restrict_ip",
+	"bypass_restrict_ip_check_if_2fa_enabled",
+	"login_after",
+	"login_before",
+	"last_login",
+	"last_ip",
+	"last_active",
+	"module_profile",
+	"role_profile_name",
+];
+
 frappe.standard_pages["Workspaces"] = function () {
 	var wrapper = frappe.container.add_page("Workspaces");
 
@@ -602,8 +620,6 @@ frappe.views.Workspace = class Workspace {
 
 			this.prepare_editorjs();
 			$(".item-anchor").removeClass("disable-click");
-
-			this.remove_page_skeleton();
 		}
 	}
 
@@ -651,6 +667,8 @@ frappe.views.Workspace = class Workspace {
 			})
 			.join("");
 
+		const sub = frappe.onerp.subscription();
+
 		$container.append(`
 			<div class="onerp-home">
 				<div class="onerp-home-topbar">
@@ -659,10 +677,17 @@ frappe.views.Workspace = class Workspace {
 		)}</span>
 					<h1 class="onerp-home-heading">${__("Main Dashboard")}</h1>
 					<p class="onerp-home-subtitle">${__(
-						"Select a module to manage your business"
+						sub && sub.blocked
+							? "Your subscription needs attention"
+							: "Select a module to manage your business"
 					)}</p>
+					${frappe.onerp.subscription_pill()}
 				</div>
-				<div class="onerp-modules-grid">${cards}</div>
+				${
+					sub && sub.blocked
+						? frappe.onerp.trial_expired_screen(sub)
+						: `<div class="onerp-modules-grid">${cards}</div>`
+				}
 			</div>
 		`);
 
@@ -742,19 +767,25 @@ frappe.views.Workspace = class Workspace {
 				this.editor.configuration.holderId === "editorjs");
 
 		if (editor_usable) {
-			this.editor.isReady.then(() => {
-				this.editor.configuration.tools.chart.config.page_data = this.page_data;
-				this.editor.configuration.tools.shortcut.config.page_data = this.page_data;
-				this.editor.configuration.tools.card.config.page_data = this.page_data;
-				this.editor.configuration.tools.onboarding.config.page_data = this.page_data;
-				this.editor.configuration.tools.quick_list.config.page_data = this.page_data;
-				this.editor.configuration.tools.number_card.config.page_data = this.page_data;
-				this.editor.configuration.tools.custom_block.config.page_data = this.page_data;
-				this.editor.render({ blocks: this.content || [] });
-			});
+			this.editor.isReady
+				.then(() => {
+					this.editor.configuration.tools.chart.config.page_data = this.page_data;
+					this.editor.configuration.tools.shortcut.config.page_data = this.page_data;
+					this.editor.configuration.tools.card.config.page_data = this.page_data;
+					this.editor.configuration.tools.onboarding.config.page_data = this.page_data;
+					this.editor.configuration.tools.quick_list.config.page_data = this.page_data;
+					this.editor.configuration.tools.number_card.config.page_data = this.page_data;
+					this.editor.configuration.tools.custom_block.config.page_data = this.page_data;
+					return this.editor.render({ blocks: this.content || [] });
+				})
+				.then(() => frappe.onerp.wait_for_widgets())
+				.finally(() => this.remove_page_skeleton());
 		} else {
 			this.destroy_editorjs();
 			this.initialize_editorjs(this.content);
+			this.editor.isReady
+				.then(() => frappe.onerp.wait_for_widgets())
+				.finally(() => this.remove_page_skeleton());
 		}
 	}
 
@@ -1836,7 +1867,15 @@ frappe.views.Workspace = class Workspace {
 	create_page_skeleton() {
 		if (this.body.find(".workspace-skeleton").length) return;
 
-		this.body.prepend(frappe.render_template("workspace_loading_skeleton"));
+		// The stock skeleton is drawn from shortcut/card blocks, which the Onerp sidebar
+		// hides -- so it flashed blocks that then vanished. A spinner reads as "loading".
+		const skeleton = this.is_read_only
+			? `<div class="workspace-skeleton onerp-loading">
+					<div class="onerp-loading-spinner"></div>
+				</div>`
+			: frappe.render_template("workspace_loading_skeleton");
+
+		this.body.prepend(skeleton);
 		this.body.find(".codex-editor").addClass("hidden");
 	}
 
@@ -1880,21 +1919,29 @@ frappe.onerp = {
 
 	link_href(item) {
 		if (!item || item.type === "Card Break") return null;
-		const type = item.link_type || item.type;
-		const target = item.link_to || item.name;
-		if (!type || !target) return null;
-		switch (type) {
-			case "DocType":
-			case "Page":
-				return "/app/" + frappe.router.slug(target);
-			case "Report":
-				return "/app/query-report/" + frappe.router.slug(target);
-			case "URL":
-			case "url":
-				return target;
-			default:
-				return null;
+		const type = String(item.link_type || item.type || "").toLowerCase();
+
+		// Shortcut rows carry the address in `url`; card links may precompute a route.
+		if (type === "url") return /^https?:\/\/.+/.test(item.url || "") ? item.url : null;
+
+		// Report names are not slugified and dashboards live under dashboard-view/, so
+		// these hrefs must come from the same helper the stock widgets use.
+		const opts = {
+			route: item.route,
+			name: item.link_to,
+			type: item.link_type || item.type,
+			is_query_report: item.is_query_report,
+			doctype: item.ref_doctype || null,
+			doc_view: item.doc_view,
+			kanban_board: item.kanban_board,
+			report_ref_doctype: item.report_ref_doctype,
+		};
+		if (type === "report" && !item.is_query_report) {
+			opts.doctype = item.dependencies;
 		}
+
+		const href = frappe.utils.generate_route(opts);
+		return href === "/app/" ? null : href;
 	},
 
 	make_context({ module, module_title, company, module_pages, cards, shortcuts }) {
@@ -1941,6 +1988,25 @@ frappe.onerp = {
 		} catch (e) {
 			/* private mode / blocked storage */
 		}
+	},
+
+	// Blocks are in the DOM before their data: every chart, number card and quick list
+	// fetches separately and keeps a visible loading node until it lands. Dropping the
+	// spinner at render time is what left the dashboard looking like a blank page.
+	wait_for_widgets(timeout_ms = 6000) {
+		const pending = ".chart-loading-state, .number-card-loading, .list-loading-state";
+		const deadline = Date.now() + timeout_ms;
+
+		return new Promise((resolve) => {
+			const check = () => {
+				const waiting = [...document.querySelectorAll(pending)].some(
+					(el) => el.offsetParent !== null
+				);
+				if (!waiting || Date.now() > deadline) return resolve();
+				setTimeout(check, 150);
+			};
+			check();
+		});
 	},
 
 	build_sidebar(ctx) {
@@ -2156,6 +2222,63 @@ frappe.onerp = {
 		this.refresh_selection($host);
 	},
 
+	// The stock "My Profile" page is an activity dashboard (energy points, heatmap)
+	// that has nothing to show a tenant; send them to their own account instead.
+	profile_href() {
+		return this.subscription() ? `/app/user/${encodeURIComponent(frappe.session.user)}` : null;
+	},
+
+	setup_profile_link() {
+		const href = this.profile_href();
+		if (!href) return;
+		$("#toolbar-user a[href^='/app/user-profile']").attr("href", href);
+	},
+
+	tidy_profile_form(frm) {
+		if (!this.subscription()) return;
+		if (frm.doctype !== "User" || frm.doc.name !== frappe.session.user) return;
+
+		if (!frm._onerp_buttons_guarded) {
+			// user.js adds this during its own refresh, which runs after this hook, so
+			// filter it at the source instead of removing it afterwards. It emails a
+			// reset link -- an admin action; the in-form Change Password section is
+			// left alone for self-service.
+			const add_button = frm.add_custom_button.bind(frm);
+			frm.add_custom_button = (label, fn, group) =>
+				label === __("Reset Password") ? null : add_button(label, fn, group);
+			frm._onerp_buttons_guarded = true;
+		}
+
+		ONERP_PROFILE_LOCKED_FIELDS.forEach((fieldname) => {
+			frm.set_df_property(fieldname, "hidden", 1);
+		});
+
+		// The module rail replaces the form sidebar, and the sidebar carried the only
+		// control a user had for their own picture.
+		frm.set_df_property("user_image", "hidden", 0);
+	},
+
+	// A tenant's roles give `select` but not `read` on User, so the list payload comes
+	// without `enabled` and the stock indicator falls through to a false "Disabled".
+	patch_user_list_indicator() {
+		if (this._user_indicator_patched || !frappe.get_indicator) return;
+		this._user_indicator_patched = true;
+
+		const stock = frappe.get_indicator;
+		frappe.get_indicator = function (doc, doctype, show_workflow_state) {
+			const indicator = stock.call(this, doc, doctype, show_workflow_state);
+			const is_own_row =
+				doctype === "User" &&
+				doc &&
+				doc.name === frappe.session.user &&
+				doc.enabled === undefined;
+			if (is_own_row && (!indicator || indicator[1] === "grey")) {
+				return [__("Active"), "green", "enabled,=,1"];
+			}
+			return indicator;
+		};
+	},
+
 	async load_context_for_module(module) {
 		try {
 			const sidebar_items = await frappe.xcall(
@@ -2200,7 +2323,61 @@ frappe.onerp = {
 			return null;
 		}
 	},
+
+	// Trial state ships with boot; erpnext.api.saas also rejects every save server-side.
+	subscription() {
+		const sub = frappe.boot && frappe.boot.onerp_subscription;
+		return sub && sub.is_tenant ? sub : null;
+	},
+
+	subscription_pill() {
+		const sub = this.subscription();
+		if (!sub || sub.blocked) return "";
+		const label =
+			sub.status === "active"
+				? __("Subscription active")
+				: __("Free trial: {0} days left", [sub.days_left]);
+		return `<span class="onerp-trial-pill">${frappe.utils.icon("hourglass", "xs")} ${label}</span>`;
+	},
+
+	trial_expired_screen(sub) {
+		const company = sub.company_name ? frappe.utils.escape_html(sub.company_name) : __("Your company");
+		const suspended = sub.status === "suspended";
+		const title = suspended ? __("Your account is suspended") : __("Your free trial has ended");
+		const detail = suspended
+			? __("{0} · access is on hold", [company])
+			: __("{0} · trial expired on {1}", [
+					company,
+					frappe.datetime.str_to_user((sub.trial_end || "").split(" ")[0]),
+			  ]);
+
+		return `
+			<div class="onerp-trial-expired">
+				<div class="onerp-trial-expired-icon">${frappe.utils.icon("lock", "lg")}</div>
+				<h2>${title}</h2>
+				<p>${detail}</p>
+				<p class="onerp-trial-expired-note">${__(
+					"Your data is safe and nothing has been deleted. Contact our team to activate your subscription and continue where you left off."
+				)}</p>
+			</div>
+		`;
+	},
 };
 
-$(document).on("list_sidebar_setup", () => frappe.onerp.setup_list_sidebar());
-$(document).on("form-refresh", (e, frm) => frappe.onerp.setup_form_sidebar(frm));
+// Expired tenants are parked on the dashboard; the module grid is not rendered for them.
+frappe.router.on("change", () => {
+	const sub = frappe.onerp.subscription();
+	if (sub && sub.blocked && frappe.get_route_str() !== "home") {
+		frappe.set_route("home");
+	}
+});
+
+$(document).on("list_sidebar_setup", () => {
+	frappe.onerp.patch_user_list_indicator();
+	frappe.onerp.setup_list_sidebar();
+});
+$(document).on("form-refresh", (e, frm) => {
+	frappe.onerp.tidy_profile_form(frm);
+	frappe.onerp.setup_form_sidebar(frm);
+});
+$(document).on("toolbar_setup", () => frappe.onerp.setup_profile_link());

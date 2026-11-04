@@ -106,6 +106,18 @@ body[data-route^="home/"] {
 			color: rgba(255, 255, 255, 0.7);
 		}
 
+		/* navbar popups render on a light surface, so they must not inherit the white nav text */
+		.dropdown-menu,
+		.search-bar .awesomplete > ul {
+			color: var(--text-color);
+
+			a,
+			.dropdown-item,
+			.btn-reset {
+				color: var(--text-color);
+			}
+		}
+
 		.search-bar {
 			background: rgba(255, 255, 255, 0.12);
 			border: 1px solid rgba(255, 255, 255, 0.18);
@@ -263,6 +275,22 @@ body.onerp-module-route {
 		margin-right: 0 !important;
 	}
 
+	/* Sidebar owns module navigation, so shortcut/card blocks are hidden, never removed —
+	   EditorJS save() serialises the DOM and would persist the deletion into the workspace doc.
+	   Pages whose only content is navigation keep their cards, else the pane renders empty. */
+	.layout-main-section:not(.edit-mode):has(.dashboard-widget-box, .number-widget-box, .onboarding-widget-box, .quick-list-widget-box, .custom-block-widget-box) {
+		.ce-block:has(.shortcut-widget-box),
+		.ce-block:has(.links-widget-box) {
+			display: none;
+		}
+
+		/* labels that only introduced a hidden link section */
+		.ce-block:has(.ce-header):has(+ .ce-block .shortcut-widget-box),
+		.ce-block:has(.ce-header):has(+ .ce-block .links-widget-box) {
+			display: none;
+		}
+	}
+
 	/* Soften default workspace chrome */
 	.page-head .page-head-content .page-actions .btn:not(.primary-action) {
 		border-radius: 10px;
@@ -347,6 +375,55 @@ body.onerp-module-route {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 		gap: 18px;
+	}
+
+	.onerp-trial-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		margin-top: 12px;
+		padding: 5px 12px;
+		border-radius: 999px;
+		background: var(--onrp-icon-tile);
+		color: var(--onrp-text);
+		font-size: 12.5px;
+		font-weight: 600;
+	}
+
+	.onerp-trial-expired {
+		max-width: 560px;
+		margin: 48px auto 0;
+		padding: 40px 34px;
+		background: #fff;
+		border: 1px solid var(--onrp-border);
+		border-radius: 18px;
+		box-shadow: var(--onrp-shadow-card);
+		text-align: center;
+
+		h2 {
+			font-size: 22px;
+			font-weight: 700;
+			color: var(--onrp-text);
+			margin: 0 0 10px;
+		}
+
+		p {
+			font-size: 14px;
+			color: var(--onrp-text-muted);
+			margin: 0 0 8px;
+		}
+	}
+
+	.onerp-trial-expired-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 62px;
+		height: 62px;
+		margin: 0 auto 18px;
+		border-radius: 50%;
+		background: var(--onrp-icon-tile);
+		color: var(--theme-brand);
 	}
 }
 
@@ -738,9 +815,15 @@ body.onerp-module-route {
 	gap: 6px 18px;
 	flex: 1 0 100%;
 	width: 100%;
-	padding: 8px 2px 2px;
+	padding: 8px 2px 6px;
 	margin-top: 6px;
 	border-top: 1px solid var(--onrp-border);
+
+	/* these are bare <li>s lifted out of their <ul>, so nothing resets list-style:
+	   without this each one paints a disc bullet next to the chips */
+	li {
+		list-style: none;
+	}
 
 	.sidebar-section {
 		display: flex;
@@ -801,8 +884,11 @@ body.onerp-module-route {
 	}
 
 	.add-list-group-by.sidebar-action,
-	.show-tags.sidebar-action {
+	.show-tags.sidebar-action,
+	.save-filter-section .sidebar-action {
 		margin: 0;
+		flex-shrink: 0;
+		white-space: nowrap;
 
 		a {
 			color: var(--theme-brand);
@@ -843,6 +929,28 @@ body.onerp-module-route {
 			background: var(--onrp-surface);
 			font-size: 12px;
 			color: var(--onrp-text);
+		}
+	}
+
+	/* the "Filter Name" control keeps an empty label row plus Bootstrap margins,
+	   which made the input sit lower than the chips and overflow the bar */
+	.save-filter-section {
+		.form-group {
+			margin: 0;
+			padding: 0;
+		}
+
+		.form-group > .clearfix {
+			display: none;
+		}
+
+		.frappe-control {
+			min-width: 180px;
+		}
+
+		/* the field has no label, so its tooltip node only ever says "undefined" */
+		.tooltip-content {
+			display: none;
 		}
 	}
 }
@@ -892,6 +1000,37 @@ body.onerp-module-route {
 		.widget-body {
 			background: var(--onrp-surface);
 		}
+	}
+}
+
+/* Spacers are layout gaps, not cards — the border and shadow above turned each one
+   into a thin empty box on every module dashboard. Keep the gap, drop the chrome. */
+.desk-page .widget.spacer {
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+}
+
+/* Module dashboard loading state */
+.workspace-skeleton.onerp-loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 340px;
+
+	.onerp-loading-spinner {
+		width: 34px;
+		height: 34px;
+		border: 3px solid var(--onrp-border);
+		border-top-color: var(--onrp-primary);
+		border-radius: 50%;
+		animation: onrp-spin 0.8s linear infinite;
+	}
+}
+
+@keyframes onrp-spin {
+	to {
+		transform: rotate(360deg);
 	}
 }
 
