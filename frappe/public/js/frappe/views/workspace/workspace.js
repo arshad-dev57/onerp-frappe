@@ -188,6 +188,9 @@ frappe.views.Workspace = class Workspace {
 
 	async setup_pages(reload) {
 		!this.discard && this.create_page_skeleton();
+		// The rail is built here but only hidden by show_home_dashboard in a later tick,
+		// which paints it for a moment on every reload of the main dashboard.
+		if (this.is_home_route()) this.hide_workspace_sidebar();
 		!this.discard && this.create_sidebar_skeleton();
 		this.sidebar_pages = !this.discard ? await this.get_pages() : this.sidebar_pages;
 		this.cached_pages = $.extend(true, {}, this.sidebar_pages);
@@ -323,6 +326,9 @@ frappe.views.Workspace = class Workspace {
 			this.sidebar.find(".selected")[0].scrollIntoView();
 
 		this.remove_sidebar_skeleton();
+
+		// Home resolves from the default workspace, not only the URL.
+		if (this.is_home_page(this.get_page_to_show())) this.hide_workspace_sidebar();
 	}
 
 	build_sidebar_section(category, root_pages) {
@@ -575,6 +581,12 @@ frappe.views.Workspace = class Workspace {
 
 		this.body.find(".onerp-home").remove();
 		$("body").removeClass("onerp-home-route").addClass("onerp-module-route");
+		// Arriving from the main dashboard, the rail still holds the stock workspace
+		// list until the page request returns, so revealing it here paints that list
+		// for the length of the request. Build the module rail first instead.
+		if (this.is_read_only && !this.sidebar.find(".onerp-sidebar").length) {
+			this.make_onerp_module_sidebar(page);
+		}
 		this.wrapper.find(".layout-side-section").removeClass("hide");
 		this.body.find(".workspace-footer").removeClass("hide");
 		$(".page-head").removeClass("hide");
@@ -627,12 +639,23 @@ frappe.views.Workspace = class Workspace {
 		return !!(page && page.public && frappe.router.slug(page.name) === "home");
 	}
 
+	is_home_route() {
+		return frappe.router.slug(frappe.get_route()[1] || "") === "home";
+	}
+
+	hide_workspace_sidebar() {
+		$("body").addClass("onerp-home-route").removeClass("onerp-module-route");
+		this.wrapper.find(".layout-side-section").addClass("hide");
+	}
+
 	show_home_dashboard(page) {
 		this.onerp_sidebar_active = false;
 		frappe.onerp && frappe.onerp.cache_context(null);
 		this.destroy_editorjs();
 		this.remove_page_skeleton();
-		$("body").removeClass("onerp-module-route onerp-sidebar-collapsed").addClass("onerp-home-route");
+		$("body")
+			.removeClass("onerp-module-route onerp-sidebar-collapsed")
+			.addClass("onerp-home-route");
 		this.wrapper.find(".layout-side-section").addClass("hide");
 		this.body.find(".workspace-footer").addClass("hide");
 		this.page.clear_actions && this.page.clear_actions();
@@ -715,9 +738,14 @@ frappe.views.Workspace = class Workspace {
 			__("Company");
 		const module_title = current_page ? __(current_page.title) : __("Module");
 
-		const cards = this.page_data && this.page_data.cards && this.page_data.cards.items;
-		const shortcuts =
-			this.page_data && this.page_data.shortcuts && this.page_data.shortcuts.items;
+		// When the rail is built before the page request returns, this.page_data still
+		// belongs to the module just left, so only use data for the page being shown.
+		const page_key = (current_page && current_page.name) || page.name;
+		const data =
+			(this.pages && this.pages[page_key]) ||
+			(this._page && this._page.name === page_key ? this.page_data : null);
+		const cards = data && data.cards && data.cards.items;
+		const shortcuts = data && data.shortcuts && data.shortcuts.items;
 
 		const ctx = frappe.onerp.make_context({
 			module,
