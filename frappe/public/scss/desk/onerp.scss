@@ -296,6 +296,12 @@ body.onerp-module-route {
 		border-radius: 10px;
 	}
 
+	/* The rail owns navigation and carries its own collapse control, so the stock
+	   page-title toggle is a second, redundant hamburger next to the module name. */
+	.page-head .sidebar-toggle-btn {
+		display: none;
+	}
+
 	&.onerp-sidebar-collapsed {
 		--onrp-rail-width: 72px;
 
