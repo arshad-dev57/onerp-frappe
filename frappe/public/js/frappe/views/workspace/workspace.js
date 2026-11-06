@@ -95,12 +95,19 @@ const ONERP_MODULES = {
 	"erpnext-integrations": {
 		icon: "es-line-link",
 		color: "#6d28d9",
-		description: __("ERPNext cloud integrations and connectors."),
+		title: __("OneERP Integrations"),
+		description: __("Cloud integrations and connectors."),
+	},
+	"oneerp-integrations": {
+		icon: "es-line-link",
+		color: "#6d28d9",
+		title: __("OneERP Integrations"),
+		description: __("Cloud integrations and connectors."),
 	},
 	build: {
 		icon: "es-line-code",
 		color: "#334155",
-		description: __("Frappe framework apps and developer tools."),
+		description: __("Developer tools and custom apps."),
 	},
 };
 
@@ -666,22 +673,38 @@ frappe.views.Workspace = class Workspace {
 		const $container = this.body.find(".editor-js-container");
 		$container.empty();
 
+		// Main dashboard only shows top-level modules. Child workspaces like
+		// Receivables / Payables stay inside Accounting.
+		const HOME_TITLE_ALIASES = {
+			"ERPNext Integrations": __("OneERP Integrations"),
+			"OneERP Integrations": __("OneERP Integrations"),
+		};
 		const module_pages = (this.public_pages || []).filter(
-			(p) => !["Home", "Welcome Workspace"].includes(p.title)
+			(p) =>
+				!["Home", "Welcome Workspace"].includes(p.title) &&
+				!(p.parent_page || p.parent)
 		);
 
 		const cards = module_pages
 			.map((p) => {
-				const slug = frappe.router.slug(p.title);
-				const meta = ONERP_MODULES[slug] || {};
+				// Route by workspace name (stable); label can differ for branding.
+				const route_slug = frappe.router.slug(p.name || p.title);
+				const title_slug = frappe.router.slug(p.title);
+				const meta =
+					ONERP_MODULES[title_slug] || ONERP_MODULES[route_slug] || {};
 				const icon = p.icon || meta.icon || "es-line-folder";
 				const color = meta.color || "var(--theme-brand)";
+				const title =
+					meta.title ||
+					HOME_TITLE_ALIASES[p.title] ||
+					HOME_TITLE_ALIASES[p.name] ||
+					__(p.title);
 				return `
-					<a class="onerp-module-card" href="/app/${slug}">
+					<a class="onerp-module-card" href="/app/${route_slug}">
 						<span class="onerp-module-icon" style="color: ${color}">
 							${frappe.utils.icon(icon, "xl")}
 						</span>
-						<span class="onerp-module-title">${frappe.utils.escape_html(__(p.title))}</span>
+						<span class="onerp-module-title">${frappe.utils.escape_html(title)}</span>
 						<span class="onerp-module-desc">${frappe.utils.escape_html(
 							meta.description || ""
 						)}</span>
@@ -1973,11 +1996,23 @@ frappe.onerp = {
 	},
 
 	make_context({ module, module_title, company, module_pages, cards, shortcuts }) {
-		return {
-			module: module || module_title,
-			module_title,
-			company,
-			module_pages: (module_pages || []).map((p) => ({
+		const is_dashboard = (item) =>
+			String(item.type || "").toLowerCase() === "dashboard" ||
+			String(item.label || "") === "Dashboard";
+		const is_learn = (item) => String(item.label || "").startsWith("Learn ");
+
+		const dashboard_pages = (shortcuts || [])
+			.filter((item) => is_dashboard(item) && this.link_href(item))
+			.map((item) => ({
+				title: __(item.label || "Dashboard"),
+				slug: frappe.router.slug(item.label || "Dashboard"),
+				href: this.link_href(item),
+				icon: "dashboard",
+			}));
+
+		const pages = [
+			...dashboard_pages,
+			...(module_pages || []).map((p) => ({
 				title: __(p.title),
 				slug: frappe.router.slug(p.title),
 				href: p.public
@@ -1985,6 +2020,13 @@ frappe.onerp = {
 					: `/app/private/${frappe.router.slug(p.title)}`,
 				icon: p.icon,
 			})),
+		];
+
+		return {
+			module: module || module_title,
+			module_title,
+			company,
+			module_pages: pages,
 			cards: (cards || [])
 				.map((card) => ({
 					label: __(card.label),
@@ -1996,8 +2038,9 @@ frappe.onerp = {
 						})),
 				}))
 				.filter((card) => card.links.length),
+			// Dashboard lives under Workspaces; hide Learn* course links from the rail
 			shortcuts: (shortcuts || [])
-				.filter((item) => this.link_href(item))
+				.filter((item) => !is_dashboard(item) && !is_learn(item) && this.link_href(item))
 				.map((item) => ({
 					label: __(item.label || item.link_to),
 					href: this.link_href(item),
@@ -2038,7 +2081,11 @@ frappe.onerp = {
 	},
 
 	build_sidebar(ctx) {
-		const $sidebar = $(`<div class="onerp-sidebar"></div>`);
+		const $sidebar = $(
+			`<div class="onerp-sidebar" data-module="${frappe.utils.escape_html(
+				ctx.module || ""
+			)}"></div>`
+		);
 		const icon_for = (p) => p.icon || (ONERP_MODULES[p.slug] || {}).icon || "es-line-folder";
 
 		$sidebar.append(`
@@ -2062,7 +2109,7 @@ frappe.onerp = {
 			</a>
 			<div class="onerp-sidebar-scroll">
 				<span class="onerp-sidebar-label">${frappe.utils.escape_html(
-					__(ctx.module)
+					__(ctx.module_title || ctx.module)
 				)} ${__("Navigation")}</span>
 			</div>
 		`);
@@ -2081,7 +2128,9 @@ frappe.onerp = {
 			`);
 			ctx.module_pages.forEach((p) => {
 				$group.find(".onerp-sidebar-group-items").append(`
-					<a class="onerp-sidebar-item workspace-item" href="${p.href}">
+					<a class="onerp-sidebar-item workspace-item" href="${p.href}" data-label="${frappe.utils.escape_html(
+					p.title
+				)}">
 						<span>${frappe.utils.escape_html(p.title)}</span>
 						${frappe.utils.icon(icon_for(p), "sm")}
 					</a>
@@ -2102,7 +2151,9 @@ frappe.onerp = {
 			`);
 			card.links.forEach((item) => {
 				$group.find(".onerp-sidebar-group-items").append(`
-					<a class="onerp-sidebar-item" href="${item.href}">
+					<a class="onerp-sidebar-item" href="${item.href}" data-label="${frappe.utils.escape_html(
+					item.label
+				)}">
 						<span>${frappe.utils.escape_html(item.label)}</span>
 						${frappe.utils.icon("es-line-list", "xs")}
 					</a>
@@ -2115,7 +2166,9 @@ frappe.onerp = {
 			$scroll.append(`<span class="onerp-sidebar-label">${__("Shortcuts")}</span>`);
 			ctx.shortcuts.forEach((item) => {
 				$scroll.append(`
-					<a class="onerp-sidebar-item" href="${item.href}">
+					<a class="onerp-sidebar-item" href="${item.href}" data-label="${frappe.utils.escape_html(
+					item.label
+				)}">
 						<span>${frappe.utils.escape_html(item.label)}</span>
 						${frappe.utils.icon("es-line-zap", "xs")}
 					</a>
@@ -2159,50 +2212,179 @@ frappe.onerp = {
 		return $sidebar;
 	},
 
+	normalize_path(path) {
+		if (!path) return "";
+		try {
+			path = decodeURIComponent(path);
+		} catch (e) {
+			/* keep raw */
+		}
+		return String(path)
+			.split("?")[0]
+			.replace(/\/+$/, "")
+			.replace(/\/+/g, "/")
+			.toLowerCase()
+			.trim();
+	},
+
+	paths_match(current_path, href) {
+		const current = this.normalize_path(current_path);
+		const target = this.normalize_path(href);
+		if (!target || target === "#" || target === "/app") return false;
+		if (current === target) return true;
+		if (current.startsWith(target + "/")) return true;
+		return false;
+	},
+
 	refresh_selection($host) {
-		const current_path = window.location.pathname.replace(/\/+$/, "");
+		if (!$host || !$host.length) return;
+
+		const current_path = window.location.pathname;
+		const route = frappe.get_route() || [];
+		const route_str = frappe.get_route_str() || "";
+		const doctype =
+			(route[0] === "List" || route[0] === "Form" || route[0] === "Tree") && route[1]
+				? route[1]
+				: null;
+		const doctype_slug = doctype ? frappe.router.slug(doctype) : null;
+		const report_name =
+			(route[0] === "query-report" || route[0] === "Report") && route[1] ? route[1] : null;
+		const dashboard_name = route[0] === "dashboard-view" && route[1] ? route[1] : null;
+
 		$host.find(".onerp-sidebar-item").removeClass("active");
-		$host.find(".onerp-sidebar-item").each(function () {
-			const href = ($(this).attr("href") || "").replace(/\/+$/, "");
-			if (!href || href === "#") return;
-			const active =
-				current_path === href ||
-				(href !== "/app" && current_path.startsWith(href + "/"));
-			if (!active) return;
-			$(this).addClass("active");
-			$(this).closest(".onerp-sidebar-group").removeClass("collapsed");
+
+		let best = null;
+		let best_score = -1;
+
+		$host.find(".onerp-sidebar-item").each((_, el) => {
+			const $el = $(el);
+			const href = $el.attr("href") || "";
+			const label = ($el.attr("data-label") || $el.find("span").first().text() || "").trim();
+			let score = -1;
+
+			if (this.paths_match(current_path, href)) {
+				score = this.normalize_path(href).length + 100;
+			} else if (route_str && this.paths_match("/app/" + route_str, href)) {
+				score = this.normalize_path(href).length + 90;
+			} else if (report_name) {
+				const report_href = `/app/query-report/${report_name}`;
+				if (this.paths_match(report_href, href) || label.toLowerCase() === String(report_name).toLowerCase()) {
+					score = 80;
+				}
+			} else if (dashboard_name) {
+				const dash_href = `/app/dashboard-view/${dashboard_name}`;
+				if (
+					this.paths_match(dash_href, href) ||
+					label.toLowerCase() === "dashboard" ||
+					label.toLowerCase() === String(dashboard_name).toLowerCase()
+				) {
+					score = 80;
+				}
+			} else if (doctype_slug) {
+				const dt_href = `/app/${doctype_slug}`;
+				if (this.paths_match(dt_href, href) || this.paths_match(current_path, dt_href)) {
+					// only if this item itself points at that doctype
+					if (this.paths_match(href, dt_href) || this.normalize_path(href) === this.normalize_path(dt_href)) {
+						score = 70;
+					}
+				}
+				if (label.toLowerCase() === String(doctype).toLowerCase()) {
+					score = Math.max(score, 75);
+				}
+			}
+
+			if (score > best_score) {
+				best_score = score;
+				best = el;
+			}
 		});
+
+		if (best) {
+			const $best = $(best);
+			$best.addClass("active");
+			$best.closest(".onerp-sidebar-group").removeClass("collapsed");
+		}
+	},
+
+	// Put the module rail onto a host, replacing a stale rail from another module
+	// (query-report / dashboard pages are reused across modules).
+	mount_sidebar($host, ctx) {
+		if (!$host || !$host.length || !ctx) return null;
+
+		this.cache_context(ctx);
+		$("body")
+			.removeClass("onerp-home-route no-list-sidebar")
+			.addClass("onerp-module-route");
+		$host.removeClass("hide hide-sidebar").addClass("onerp-host");
+
+		const $existing = $host.find("> .onerp-sidebar");
+		if ($existing.length && $existing.attr("data-module") === String(ctx.module || "")) {
+			this.refresh_selection($host);
+			return $existing;
+		}
+
+		$existing.remove();
+		const $sidebar = this.build_sidebar(ctx);
+		$host.prepend($sidebar);
+		this.refresh_selection($host);
+		return $sidebar;
 	},
 
 	// Prefer the module the user entered from (Buying/Stock/...). Only fall back
 	// to the DocType's own module when there is no cached workspace context yet
 	// (direct URL / refresh). Buying links Material Request (Stock) etc.
 	async resolve_context(fallback_module) {
-		if (this.context) return this.context;
 		let remembered = null;
 		try {
 			remembered = sessionStorage.getItem("onerp_active_module");
 		} catch (e) {
 			/* ignore */
 		}
-		const module = remembered || fallback_module;
-		if (!module) return null;
-		return await this.load_context_for_module(module);
+
+		// Keep the active module sticky while browsing reports/lists opened from it.
+		const preferred =
+			(this.context && this.context.module) || remembered || fallback_module;
+		if (!preferred) return null;
+
+		if (this.context && this.context.module === preferred) {
+			return this.context;
+		}
+
+		return await this.load_context_for_module(preferred);
 	},
 
 	// List pages: keep the module sidebar and move the filter widget to the top bar
 	async setup_list_sidebar() {
-		if (!window.cur_list || !cur_list.page || !cur_list.page.sidebar) return;
-		const page = cur_list.page;
-		const $host = page.sidebar;
-		const $list_sidebar = $host.find(".list-sidebar");
+		if (!window.cur_list || !cur_list.page) return;
 
-		$("body").removeClass("onerp-home-route").addClass("onerp-module-route");
+		const page = cur_list.page;
+		let $host = page.sidebar;
+
+		// List factory can build the page without a side column when desk list
+		// sidebar is off — create one so the module rail still has a home.
+		if (!$host || !$host.length) {
+			const $main = $(page.wrapper || page.parent).find(".layout-main");
+			if (!$main.length) return;
+			$main.prepend('<div class="col-lg-2 layout-side-section"></div>');
+			$main
+				.find("> .layout-main-section-wrapper")
+				.removeClass("col-md-12")
+				.addClass("col");
+			$host = $main.find("> .layout-side-section");
+			page.sidebar = $host;
+		}
+
+		const list_module = cur_list.meta && cur_list.meta.module;
+		const ctx = await this.resolve_context(list_module);
+		if (!ctx) return;
+
+		const $list_sidebar = $host.find(".list-sidebar");
 
 		// Move "Filter By" + "Save Filter" widgets from the sidebar into the top bar
 		const $page_form = page.main && page.main.find(".page-form");
-		if ($page_form && $page_form.length) {
-			const $bar = $(`<div class="onerp-filter-bar"></div>`);
+		if ($page_form && $page_form.length && $list_sidebar.length) {
+			let $bar = $page_form.find(".onerp-filter-bar");
+			if (!$bar.length) $bar = $(`<div class="onerp-filter-bar"></div>`);
 			$list_sidebar.find(".sidebar-section.filter-section").appendTo($bar);
 			$list_sidebar.find(".sidebar-section.save-filter-section").appendTo($bar);
 			if ($bar.children().length) {
@@ -2210,12 +2392,88 @@ frappe.onerp = {
 			}
 		}
 
-		const list_module = cur_list.meta && cur_list.meta.module;
-		const ctx = await this.resolve_context(list_module);
+		$list_sidebar.addClass("hidden");
+		this.mount_sidebar($host, ctx);
+	},
+
+	// Desk Dashboard pages are not Form/List — mount the same module rail there.
+	async setup_dashboard_sidebar() {
+		const route = frappe.get_route();
+		if (!route || route[0] !== "dashboard-view") return;
+
+		const page = frappe.dashboard && frappe.dashboard.page;
+		if (!page || !page.wrapper) return;
+
+		const ctx = await this.resolve_context(route[1]);
 		if (!ctx) return;
 
-		$list_sidebar.addClass("onerp-host").empty().append(this.build_sidebar(ctx));
-		this.refresh_selection($host);
+		let $host = page.sidebar;
+		// Older sessions may still have the single-column dashboard page in memory.
+		if (!$host || !$host.length) {
+			const $main = page.wrapper.find(".layout-main");
+			if ($main.length && !$main.find("> .layout-side-section").length) {
+				$main.prepend('<div class="col-lg-2 layout-side-section"></div>');
+			}
+			$host = page.wrapper.find(".layout-side-section");
+			page.sidebar = $host;
+		}
+		if (!$host.length) return;
+
+		this.mount_sidebar($host, ctx);
+	},
+
+	// Page / Report shortcuts (Point of Sale, query reports, …) often use
+	// single_column layouts with no rail — inject the same module sidebar there.
+	async setup_page_sidebar() {
+		const route = frappe.get_route() || [];
+		const first = route[0] || "";
+		if (!first) return;
+
+		if (first === "Workspaces" || frappe.router.slug(first) === "home") return;
+
+		// List / Form have dedicated mount paths; still fall back if they missed.
+		if (first === "List") {
+			await this.setup_list_sidebar();
+			return;
+		}
+		if (first === "Form") {
+			if (window.cur_frm) await this.setup_form_sidebar(cur_frm);
+			return;
+		}
+
+		const ctx = await this.resolve_context(null);
+		if (!ctx) return;
+
+		const page_obj =
+			(frappe.pages[first] && frappe.pages[first].page) ||
+			frappe.ui.pages[frappe.get_route_str()] ||
+			frappe.ui.pages[first] ||
+			(frappe.dashboard && frappe.dashboard.page) ||
+			null;
+
+		const $page = page_obj && page_obj.wrapper && page_obj.wrapper.length
+			? page_obj.wrapper
+			: $(".page-container:visible").first();
+		if (!$page || !$page.length) return;
+
+		let $host =
+			(page_obj && page_obj.sidebar && page_obj.sidebar.length && page_obj.sidebar) ||
+			$page.find(".layout-side-section").first();
+
+		if (!$host || !$host.length) {
+			const $main = $page.find(".layout-main");
+			if (!$main.length) return;
+			$main.prepend('<div class="col-lg-2 layout-side-section"></div>');
+			$main
+				.find("> .layout-main-section-wrapper")
+				.removeClass("col-md-12")
+				.addClass("col");
+			$host = $main.find("> .layout-side-section");
+			if (page_obj) page_obj.sidebar = $host;
+		}
+		if (!$host.length) return;
+
+		this.mount_sidebar($host, ctx);
 	},
 
 	// Form pages: inject the module sidebar into the page's empty layout-side-section
@@ -2234,20 +2492,8 @@ frappe.onerp = {
 		const ctx = await this.resolve_context(meta.module);
 		if (!ctx) return;
 
-		const $host = frm.page.sidebar;
-		// New/unsaved forms call hide-sidebar — keep the module rail visible anyway.
-		$host.removeClass("hide-sidebar").addClass("onerp-host");
-		$host.find(".form-sidebar").addClass("hidden");
-
-		$("body").removeClass("onerp-home-route").addClass("onerp-module-route");
-
-		if ($host.find(".onerp-sidebar").length) {
-			this.refresh_selection($host);
-			return;
-		}
-
-		$host.prepend(this.build_sidebar(ctx));
-		this.refresh_selection($host);
+		frm.page.sidebar.find(".form-sidebar").addClass("hidden");
+		this.mount_sidebar(frm.page.sidebar, ctx);
 	},
 
 	// The stock "My Profile" page is an activity dashboard (energy points, heatmap)
@@ -2398,6 +2644,15 @@ frappe.router.on("change", () => {
 	if (sub && sub.blocked && frappe.get_route_str() !== "home") {
 		frappe.set_route("home");
 	}
+	if (frappe.get_route()[0] === "dashboard-view") {
+		frappe.onerp.setup_dashboard_sidebar();
+	}
+	// Page layouts (incl. single_column) finish mounting after the route flips.
+	setTimeout(() => frappe.onerp.setup_page_sidebar(), 0);
+});
+
+$(document).on("page-change", () => {
+	setTimeout(() => frappe.onerp.setup_page_sidebar(), 50);
 });
 
 $(document).on("list_sidebar_setup", () => {

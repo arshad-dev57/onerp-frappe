@@ -8,23 +8,27 @@ frappe.pages["dashboard-view"].on_page_load = function (wrapper) {
 	frappe.ui.make_app_page({
 		parent: wrapper,
 		title: __("Dashboard"),
-		single_column: true,
+		// Keep the side column so onerp can mount the module rail here.
+		single_column: false,
 	});
 
 	frappe.dashboard = new Dashboard(wrapper);
 	$(wrapper).bind("show", function () {
 		frappe.dashboard.show();
+		frappe.onerp && frappe.onerp.setup_dashboard_sidebar();
 	});
 };
 
 class Dashboard {
 	constructor(wrapper) {
 		this.wrapper = $(wrapper);
+		this.page = wrapper.page;
+		// Render into the main column only — emptying .page-content would detach the sidebar.
+		this.page.main.empty();
 		$(`<div class="dashboard" style="overflow: visible">
 			<div class="dashboard-graph"></div>
-		</div>`).appendTo(this.wrapper.find(".page-content").empty());
+		</div>`).appendTo(this.page.main);
 		this.container = this.wrapper.find(".dashboard-graph");
-		this.page = wrapper.page;
 	}
 
 	show() {

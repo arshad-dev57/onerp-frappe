@@ -3,11 +3,15 @@
 /* SCSS aliases → change colours in brand_theme.scss only */
 $brand: var(--theme-brand);
 $brand-dark: var(--theme-brand-dark);
-$dark-bg: var(--theme-navy);
+$brand-soft: var(--theme-brand-soft);
 $text-dark: var(--theme-text);
 $text-muted: var(--theme-muted);
 $border: var(--theme-border);
-$link-blue: var(--theme-link);
+$page-bg: var(--theme-bg);
+$link: var(--theme-link);
+
+$field-bg: #f4f4f4;
+$card-radius: 48px;
 
 body {
 	background: #fff;
@@ -30,55 +34,143 @@ body {
 	}
 }
 
-/* ---------- Layout ---------- */
-.auth-wrapper {
-	display: flex;
+/* ---------- Page frame (dotted bg + rounded border) ---------- */
+.auth-page {
 	min-height: 100vh;
-	width: 100%;
+	padding: 10px;
 	background: #fff;
 }
 
-.auth-left {
-	flex: 0 0 56%;
-	max-width: 56%;
+.auth-frame {
+	min-height: calc(100vh - 20px);
 	display: flex;
 	flex-direction: column;
-	padding: 48px 56px 36px;
-	background: #fff;
-	border-radius: 0 28px 28px 0;
+	border: 1px solid $border;
+	border-radius: 28px;
+	background-color: $page-bg;
+	background-image: radial-gradient(#d6d9de 1px, transparent 1.2px);
+	background-size: 18px 18px;
+	overflow: hidden;
 }
 
-.auth-logo {
-	img {
-		height: 52px;
-		max-width: 320px;
-		object-fit: contain;
-	}
-}
-
-.auth-form-area {
-	flex: 1;
+/* ---------- Top bar ---------- */
+.auth-topbar {
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	padding: 24px 0;
+	justify-content: space-between;
+	padding: 28px 32px 0;
 }
 
-.auth-footer {
-	text-align: center;
-	font-size: 14px;
-	color: $text-muted;
+.auth-logo img {
+	height: 44px;
+	max-width: 260px;
+	object-fit: contain;
+}
 
-	a {
-		color: $link-blue;
-		text-decoration: none;
-		&:hover {
-			text-decoration: underline;
+.auth-topchip {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 16px;
+	background: #fff;
+	border: 1px solid $border;
+	border-radius: 18px;
+	text-decoration: none;
+	transition: box-shadow 0.15s;
+
+	&:hover {
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+	}
+
+	.auth-topchip-icon {
+		width: 36px;
+		height: 36px;
+		border-radius: 50%;
+		background: $brand;
+		color: #fff;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 20px;
+		font-weight: 600;
+		line-height: 1;
+	}
+
+	.auth-topchip-text {
+		display: flex;
+		flex-direction: column;
+		line-height: 1.25;
+
+		strong {
+			font-size: 15px;
+			font-weight: 600;
+			color: $text-dark;
+		}
+		small {
+			font-size: 11px;
+			color: $text-muted;
 		}
 	}
 }
 
-/* ---------- Sections ---------- */
+/* ---------- Center stage ---------- */
+.auth-stage {
+	flex: 1;
+	width: 100%;
+	max-width: 640px;
+	margin: 0 auto;
+	padding: 40px 16px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+/* brand tab behind the card */
+.auth-tab {
+	position: relative;
+	background: $brand-soft;
+	border-radius: 36px 36px 0 0;
+	padding: 28px 28px 52px;
+
+	.auth-tab-inner {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		padding: 14px 16px;
+		background: #fff;
+		border-radius: 18px;
+	}
+
+	.auth-tab-badge {
+		width: 34px;
+		height: 34px;
+		border-radius: 10px;
+		background: $brand-soft;
+		color: $text-dark;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 15px;
+		font-weight: 700;
+	}
+
+	.auth-tab-title {
+		flex: 1;
+		font-size: 15px;
+		font-weight: 500;
+		color: $text-dark;
+	}
+
+	.auth-tab-pill {
+		padding: 7px 14px;
+		background: #f3f4f6;
+		border-radius: 10px;
+		font-size: 12px;
+		color: $text-muted;
+	}
+}
+
+/* ---------- Sections (cards) ---------- */
 .for-signup,
 .for-forgot,
 .for-email-login,
@@ -89,19 +181,16 @@ body {
 .for-login,
 .for-signup,
 .for-forgot {
+	position: relative;
 	width: 100%;
-	max-width: 420px;
-
-	&.for-signup,
-	.signup-wide {
-		max-width: 480px;
-	}
+	margin-top: -36px;
 
 	.page-card {
-		background: transparent;
-		border: none;
-		box-shadow: none;
-		padding: 0;
+		background: #fff;
+		border: 1px solid $border;
+		border-radius: $card-radius;
+		box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02);
+		padding: 48px 48px 48px;
 		margin: 0;
 		max-width: none;
 
@@ -112,54 +201,63 @@ body {
 	}
 
 	.auth-heading {
-		margin-bottom: 20px;
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 24px;
+		margin: 0 0 40px;
+		padding: 0 4px;
 
 		h1 {
-			font-size: 28px;
-			font-weight: 600;
+			flex: 0 0 52%;
+			max-width: 52%;
+			font-size: 26px;
+			line-height: 1.3;
+			font-weight: 500;
 			color: $text-dark;
-			margin: 0 0 8px;
+			margin: 0;
 			letter-spacing: -0.01em;
 		}
 		p {
-			font-size: 16px;
+			flex: 1;
+			max-width: 230px;
+			text-align: center;
+			font-size: 14px;
+			line-height: 1.45;
 			color: $text-muted;
-			margin: 0;
+			margin: 6px 0 0;
 		}
 	}
 
 	.social-login-buttons {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 14px;
-		margin-bottom: 22px;
+		gap: 12px;
+		margin-bottom: 20px;
 
 		.btn-login-option {
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			gap: 10px;
-			height: 54px;
+			height: 52px;
 			background: #fff;
 			border: 1px solid $border;
-			border-radius: 12px;
+			border-radius: 999px;
 			color: $text-dark;
-			font-size: 16px;
+			font-size: 15px;
 			font-weight: 500;
 			text-decoration: none;
-			box-shadow: none;
-			transition: background 0.15s, border-color 0.15s;
+			transition: background 0.15s;
 
 			img,
 			svg {
-				width: 22px;
-				height: 22px;
+				width: 20px;
+				height: 20px;
 				margin: 0;
 			}
-
 			&:hover {
 				background: #f8f9fa;
-				border-color: #d5d9de;
 			}
 		}
 	}
@@ -169,7 +267,7 @@ body {
 		align-items: center;
 		gap: 14px;
 		margin: 0 0 20px;
-		font-size: 14px;
+		font-size: 13px;
 		color: $text-muted;
 
 		&::before,
@@ -181,18 +279,11 @@ body {
 		}
 	}
 
+	/* ----- fields ----- */
 	.page-card-body,
 	.signup-pane {
 		.form-group {
 			margin-bottom: 0;
-		}
-
-		.form-label {
-			display: block;
-			font-size: 14px;
-			font-weight: 500;
-			color: $text-dark;
-			margin-bottom: 8px;
 		}
 
 		input[type="text"],
@@ -203,27 +294,30 @@ body {
 		select,
 		textarea {
 			width: 100%;
-			min-height: 52px;
-			padding: 0 16px;
-			background: #fff;
+			height: 54px;
+			padding: 0 24px;
+			background: $field-bg;
 			border: 1px solid $border;
-			border-radius: 12px;
-			font-size: 15px;
+			border-radius: 999px;
+			font-size: 16px;
 			color: $text-dark;
 			box-shadow: none;
 			margin-bottom: 0;
-			transition: border-color 0.15s, box-shadow 0.15s;
+			transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 
 			&:focus {
 				outline: none;
+				background: #fff;
 				border-color: $brand;
 				box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-brand) 15%, transparent);
 			}
 		}
 
 		textarea {
+			height: auto;
 			min-height: 96px;
-			padding: 14px 16px;
+			padding: 16px 24px;
+			border-radius: 28px;
 			resize: vertical;
 		}
 
@@ -231,12 +325,12 @@ body {
 			appearance: none;
 			background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235b6470' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
 			background-repeat: no-repeat;
-			background-position: right 14px center;
-			padding-right: 40px;
+			background-position: right 20px center;
+			padding-right: 48px;
 		}
 
 		::placeholder {
-			color: #9aa1ab;
+			color: #8b8f96;
 			opacity: 1;
 		}
 
@@ -245,57 +339,122 @@ body {
 		}
 	}
 
+	.mt-3 {
+		margin-top: 16px !important;
+	}
+
 	.password-field {
 		position: relative;
 
 		input {
-			padding-right: 72px;
+			padding-right: 96px;
 		}
 
 		.toggle-password {
 			position: absolute;
-			right: 14px;
+			right: 12px;
 			top: 50%;
 			transform: translateY(-50%);
+			height: 34px;
+			padding: 0 16px;
 			border: 0;
-			background: transparent;
-			color: $text-muted;
-			font-size: 13px;
-			font-weight: 600;
-			cursor: pointer;
-			padding: 0;
-		}
-	}
-
-	.forgot-password-message {
-		margin: 12px 0 0;
-		text-align: right;
-		font-size: 14px;
-
-		a {
-			color: $brand;
-			text-decoration: none;
+			border-radius: 999px;
+			background: #fff;
+			color: $text-dark;
+			font-size: 12px;
 			font-weight: 500;
+			cursor: pointer;
+			box-shadow: 0 0 0 1px $border;
+
 			&:hover {
-				color: $brand-dark;
+				background: #fafafa;
 			}
 		}
 	}
 
+	/* "Having trouble in sign in?   Help (i)" */
+	.register-below-password {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		margin: 14px 0 0;
+		font-size: 13.5px;
+		color: $text-muted;
+
+		a {
+			color: $brand;
+			font-weight: 600;
+			text-decoration: none;
+
+			&:hover {
+				color: $brand-dark;
+				text-decoration: underline;
+			}
+		}
+	}
+
+	.forgot-password-message {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin: 28px 0 0;
+		padding: 0 2px;
+		font-size: 15px;
+
+		span {
+			color: $text-muted;
+		}
+
+		a {
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+			color: $brand;
+			text-decoration: none;
+			font-weight: 500;
+
+			&:hover {
+				color: $brand-dark;
+			}
+		}
+
+		.help-icon {
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			background: $brand;
+			color: #fff;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 12px;
+			font-style: normal;
+			font-weight: 700;
+			font-family: Georgia, serif;
+		}
+	}
+
+	/* ----- buttons ----- */
 	.page-card-actions {
-		margin-top: 24px;
+		margin-top: 110px;
 
 		.btn-primary,
 		.btn-login,
 		.btn-secondary,
 		.btn-signup {
+			position: relative;
 			width: 100%;
-			height: 52px;
+			height: 58px;
 			border: none;
-			border-radius: 12px;
-			font-size: 16px;
-			font-weight: 600;
+			border-radius: 18px;
+			font-size: 17px;
+			font-weight: 500;
 			box-shadow: none;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			text-decoration: none;
 			transition: background 0.15s, opacity 0.15s;
 		}
 
@@ -304,6 +463,23 @@ body {
 		.btn-signup {
 			background: $brand;
 			color: #fff;
+
+			/* arrow box (pure CSS so JS text changes don't remove it) */
+			&::after {
+				content: "↗";
+				position: absolute;
+				right: 8px;
+				top: 8px;
+				width: 42px;
+				height: 42px;
+				border-radius: 12px;
+				background: rgba(255, 255, 255, 0.18);
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 20px;
+				line-height: 1;
+			}
 
 			&:hover:not(:disabled) {
 				background: $brand-dark;
@@ -324,6 +500,12 @@ body {
 		}
 	}
 
+	/* forgot card has no big gap */
+	&.for-forgot .page-card-actions,
+	&.for-signup .page-card-actions {
+		margin-top: 28px;
+	}
+
 	.signup-actions-row {
 		display: grid;
 		grid-template-columns: 1fr 1.4fr;
@@ -336,12 +518,8 @@ body {
 		gap: 12px;
 	}
 
-	.mt-3 {
-		margin-top: 16px !important;
-	}
-
 	.auth-switch {
-		margin-top: 24px;
+		margin: 24px 0 0;
 		text-align: center;
 		font-size: 15px;
 		color: $text-muted;
@@ -357,17 +535,18 @@ body {
 	}
 
 	.signup-hint {
-		margin: 16px 0 0;
+		margin: 16px 4px 0;
 		font-size: 13px;
 		color: $text-muted;
 		line-height: 1.45;
 	}
 
+	/* signup stepper */
 	.signup-steps {
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		margin-bottom: 22px;
+		margin: -16px 0 24px;
 	}
 
 	.signup-step {
@@ -408,22 +587,6 @@ body {
 		}
 	}
 
-	.guest-link {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 12px;
-		margin-top: 28px;
-		color: $brand;
-		font-size: 16px;
-		font-weight: 500;
-		text-decoration: none;
-
-		&:hover {
-			color: $brand-dark;
-		}
-	}
-
 	.invalid-login {
 		animation: wiggle 0.5s linear;
 	}
@@ -450,69 +613,77 @@ body {
 	}
 }
 
-/* ---------- Right panel ---------- */
-.auth-right {
-	flex: 1;
-	position: relative;
+/* ---------- Footer ---------- */
+.auth-footer {
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 20px;
-	padding: 48px;
-	background-color: $dark-bg;
-	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='150'><style>text{font:30px monospace;fill:white;opacity:.07}</style><text x='0' y='40'>( ) ; { %26lt;/%26gt; ] }</text><text x='-120' y='100'>] }[ ' ( ) ; { %26lt;/%26gt;</text><text x='-40' y='140'>} [ ( ) ; { %26lt;/%26gt; ]</text></svg>");
-	background-repeat: repeat;
-	border-radius: 28px 0 0 28px;
-	overflow: hidden;
+	gap: 14px;
+	padding: 0 16px 32px;
+	font-size: 13px;
+	color: $text-dark;
 
-	h2 {
-		position: relative;
-		z-index: 1;
-		margin: 0;
-		text-align: center;
-		color: #fff;
-		font-size: 52px;
-		line-height: 1.15;
-		font-weight: 700;
-		letter-spacing: -0.02em;
+	a {
+		color: $text-dark;
+		text-decoration: none;
+		&:hover {
+			text-decoration: underline;
+		}
 	}
 
-	.auth-right-sub {
-		position: relative;
-		z-index: 1;
-		margin: 0;
-		max-width: 360px;
-		text-align: center;
-		color: rgba(255, 255, 255, 0.72);
-		font-size: 16px;
-		line-height: 1.5;
+	.auth-footer-sep {
+		width: 1.5px;
+		height: 30px;
+		background: $text-dark;
 	}
-
-	.auth-illustration {
-		position: relative;
-		z-index: 1;
-		width: min(100%, 460px);
-		height: auto;
+	.auth-footer-dot {
+		color: $text-muted;
 	}
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 991px) {
-	.auth-right {
+@media (max-width: 640px) {
+	.auth-topbar {
+		padding: 20px 16px 0;
+	}
+	.auth-topchip-text {
 		display: none;
 	}
-	.auth-left {
-		flex: 1 1 100%;
-		max-width: 100%;
-		padding: 32px 24px;
-		border-radius: 0;
+	.auth-tab {
+		padding: 20px 16px 48px;
+		border-radius: 28px 28px 0 0;
+	}
+	.for-login,
+	.for-signup,
+	.for-forgot {
+		.page-card {
+			padding: 32px 22px;
+			border-radius: 32px;
+		}
+		.auth-heading {
+			flex-direction: column;
+			gap: 10px;
+			margin-bottom: 28px;
+
+			h1 {
+				flex: none;
+				max-width: 100%;
+				font-size: 24px;
+			}
+			p {
+				max-width: none;
+				text-align: left;
+				margin: 0;
+			}
+		}
+		.page-card-actions {
+			margin-top: 56px;
+		}
 	}
 }
 
 @media (max-width: 480px) {
 	.for-login .social-login-buttons,
-	.for-login .form-row-2,
 	.for-signup .form-row-2,
 	.for-signup .signup-actions-row {
 		grid-template-columns: 1fr;

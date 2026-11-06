@@ -296,7 +296,6 @@ login.login_handlers = (function () {
 
 login.signup_step = 1;
 login.signup_options_loaded = false;
-login.signup_options_loading = false;
 
 login.signup_captions = {
 	1: {{ _("Step 1 of 3 — Your details") | tojson }},
@@ -343,10 +342,7 @@ login.render_signup_step = function () {
 };
 
 login.load_registration_options = function () {
-	// #signup can be routed twice on load (initial hash + the hashchange trigger), and a
-	// second append would double every country and currency option.
-	if (login.signup_options_loaded || login.signup_options_loading || window.disable_signup) return;
-	login.signup_options_loading = true;
+	if (login.signup_options_loaded || window.disable_signup) return;
 
 	frappe.call({
 		method: "erpnext.api.auth.get_registration_options",
@@ -371,10 +367,8 @@ login.load_registration_options = function () {
 			}
 
 			login.signup_options_loaded = true;
-			login.signup_options_loading = false;
 		},
 		error: function (err) {
-			login.signup_options_loading = false;
 			var msg = {{ _("Could not load countries/currencies. Is signup enabled?") | tojson }};
 			try {
 				if (err && err._server_messages) {

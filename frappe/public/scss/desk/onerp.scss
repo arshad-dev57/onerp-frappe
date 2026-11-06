@@ -249,13 +249,16 @@ body.onerp-module-route {
 		min-height: 100vh !important;
 	}
 
-	/* Forms hide .layout-side-section for new docs — keep onerp rail visible */
+	/* Forms / Lists can hide .layout-side-section — keep onerp rail visible */
 	.layout-side-section.onerp-host,
-	.layout-side-section.hide-sidebar.onerp-host {
+	.layout-side-section.hide-sidebar.onerp-host,
+	&.no-list-sidebar .layout-side-section.onerp-host,
+	&.no-list-sidebar [data-page-route^="List/"] .layout-side-section.onerp-host {
 		display: block !important;
 	}
 
-	.layout-side-section.onerp-host .form-sidebar {
+	.layout-side-section.onerp-host .form-sidebar,
+	.layout-side-section.onerp-host .list-sidebar {
 		display: none !important;
 	}
 
@@ -711,11 +714,16 @@ body.onerp-module-route {
 			}
 		}
 
-		&.active {
-			background: var(--theme-brand);
-			color: #fff;
+		&.active,
+		&.active:hover {
+			background: var(--theme-brand) !important;
+			color: #fff !important;
 			font-weight: 600;
 			box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-brand) 40%, transparent);
+
+			span {
+				color: #fff !important;
+			}
 
 			svg {
 				--icon-stroke: #fff;

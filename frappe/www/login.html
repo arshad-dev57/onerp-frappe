@@ -10,282 +10,282 @@
 {# Hide default website navbar on the login page #}
 {% block navbar %}{% endblock %}
 
-{% macro logo_section() %}
-<div class="auth-logo">
-	<img class="app-logo" src="/assets/frappe/images/onerp-logo.png" alt="Onerp">
-</div>
-{% endmacro %}
-
 {% block page_content %}
-<div class="auth-wrapper">
+<div class="auth-page">
+<div class="auth-frame">
 
-	<!-- ============ LEFT PANEL ============ -->
-	<div class="auth-left">
-		{{ logo_section() }}
+	<!-- ============ TOP BAR ============ -->
+	<header class="auth-topbar">
+		<div class="auth-logo">
+			<img class="app-logo" src="/assets/frappe/images/onerp-logo.png" alt="Onerp">
+		</div>
+		{% if not disable_signup %}
+		<a class="auth-topchip" href="#signup">
+			<span class="auth-topchip-icon">+</span>
+			<span class="auth-topchip-text">
+				<strong>{{ _("New here?") }}</strong>
+				<small>{{ _("Register your company") }}</small>
+			</span>
+		</a>
+		{% endif %}
+	</header>
 
-		<div class="auth-form-area">
-			<noscript>
-				<div class="text-center my-5">
-					<h4>{{ _("Javascript is disabled on your browser") }}</h4>
-					<p class="text-muted">{{ _("You need to enable JavaScript for your app to work.") }}</p>
+	<!-- ============ CENTER STAGE ============ -->
+	<main class="auth-stage">
+
+		<!-- brand tab (sits behind the card) -->
+		<div class="auth-tab">
+			<div class="auth-tab-inner">
+				<span class="auth-tab-badge">O</span>
+				<span class="auth-tab-title">{{ _("Work smarter, NOT harder") }}</span>
+				<span class="auth-tab-pill">{{ _("Onerp") }}</span>
+			</div>
+		</div>
+
+		<noscript>
+			<div class="text-center my-5">
+				<h4>{{ _("Javascript is disabled on your browser") }}</h4>
+				<p class="text-muted">{{ _("You need to enable JavaScript for your app to work.") }}</p>
+			</div>
+		</noscript>
+
+		<!-- ---------- LOGIN (email + password) ---------- -->
+		<section class="for-login">
+			<div class="login-content page-card">
+				<div class="auth-heading">
+					<h1>{{ _("Welcome Back to Your Portal") }}</h1>
+					<p>{{ _("Run accounting, inventory, sales and more — all in one place.") }}</p>
 				</div>
-			</noscript>
 
-			<!-- ---------- LOGIN (email + password) ---------- -->
-			<section class="for-login">
-				<div class="login-content page-card">
-					<div class="auth-heading">
-						<h1>{{ _("Welcome back") }}</h1>
-						<p>{{ _("Sign in with your email and password") }}</p>
+				{% if provider_logins %}
+				<div class="social-login-buttons">
+					{% for provider in provider_logins %}
+					<a href="{{ provider.auth_url }}"
+						class="btn-login-option btn-{{ provider.name }}">
+						{% if provider.icon %}{{ provider.icon }}{% endif %}
+						<span>{{ provider.provider_name }}</span>
+					</a>
+					{% endfor %}
+				</div>
+				<div class="login-divider"><span>{{ _("OR") }}</span></div>
+				{% endif %}
+
+				<form class="form-signin form-login" role="form">
+					<div class="page-card-body">
+						<div class="form-group">
+							<input type="email" id="login_email" class="form-control"
+								placeholder="{{ _('you@company.com') }}" required autofocus
+								autocomplete="username" aria-label="{{ _('Email') }}">
+						</div>
+						<div class="form-group mt-3">
+							<div class="password-field">
+								<input type="password" id="login_password" class="form-control"
+									placeholder="{{ _('Your Password...') }}" required
+									autocomplete="current-password" aria-label="{{ _('Password') }}">
+								<button type="button" class="toggle-password" toggle="#login_password"
+									aria-label="{{ _('Show password') }}">{{ _("Show") }}</button>
+							</div>
+						</div>
+						{% if not disable_signup %}
+						<p class="register-below-password">
+							<span>{{ _("New here?") }}</span>
+							<a href="#signup">{{ _("Register your company") }}</a>
+						</p>
+						{% endif %}
+						<p class="forgot-password-message">
+							<span>{{ _("Having trouble in sign in?") }}</span>
+							<a href="#forgot">{{ _("Help") }}<i class="help-icon">i</i></a>
+						</p>
 					</div>
-
-					{% if provider_logins %}
-					<div class="social-login-buttons">
-						{% for provider in provider_logins %}
-						<a href="{{ provider.auth_url }}"
-							class="btn-login-option btn-{{ provider.name }}">
-							{% if provider.icon %}{{ provider.icon }}{% endif %}
-							<span>{{ provider.provider_name }}</span>
-						</a>
-						{% endfor %}
+					<div class="page-card-actions">
+						<button class="btn btn-primary btn-block btn-login" type="submit">
+							{{ _("Enter Your Portal") }}</button>
 					</div>
-					<div class="login-divider"><span>{{ _("OR") }}</span></div>
-					{% endif %}
+				</form>
+			</div>
+		</section>
 
-					<form class="form-signin form-login" role="form">
-						<div class="page-card-body">
+		<!-- ---------- SIGNUP (multi-step company registration) ---------- -->
+		<section class='for-signup {{ "signup-disabled" if disable_signup else "" }}'>
+			<div class="login-content page-card signup-wide">
+				{%- if not disable_signup -%}
+				<div class="auth-heading">
+					<h1>{{ _("Register your company") }}</h1>
+					<p class="signup-step-caption" data-step-caption>{{ _("Step 1 of 3 — Your details") }}</p>
+				</div>
+
+				<div class="signup-steps" aria-hidden="true">
+					<span class="signup-step is-active" data-step-dot="1">1</span>
+					<span class="signup-step-line"></span>
+					<span class="signup-step" data-step-dot="2">2</span>
+					<span class="signup-step-line"></span>
+					<span class="signup-step" data-step-dot="3">3</span>
+				</div>
+
+				<form class="form-signin form-signup-company" id="company-register-form" role="form" novalidate>
+					<!-- Step 1 -->
+					<div class="signup-pane is-active" data-signup-step="1">
+						<div class="form-row-2">
 							<div class="form-group">
-								<label class="form-label" for="login_email">{{ _("Email") }}</label>
-								<input type="email" id="login_email" class="form-control"
-									placeholder="{{ _('you@company.com') }}" required autofocus
-									autocomplete="username">
+								<input type="text" id="reg_first_name" class="form-control"
+									placeholder="{{ _('First name') }}" aria-label="{{ _('First name') }}" required autocomplete="given-name">
 							</div>
-							<div class="form-group mt-3">
-								<label class="form-label" for="login_password">{{ _("Password") }}</label>
-								<div class="password-field">
-									<input type="password" id="login_password" class="form-control"
-										placeholder="••••••••" required autocomplete="current-password">
-									<button type="button" class="toggle-password" toggle="#login_password"
-										aria-label="{{ _('Show password') }}">{{ _("Show") }}</button>
-								</div>
+							<div class="form-group">
+								<input type="text" id="reg_last_name" class="form-control"
+									placeholder="{{ _('Last name') }}" aria-label="{{ _('Last name') }}" required autocomplete="family-name">
 							</div>
-							<p class="forgot-password-message">
-								<a href="#forgot">{{ _("Forgot Password?") }}</a>
-							</p>
+						</div>
+						<div class="form-group mt-3">
+							<input type="email" id="reg_email" class="form-control"
+								placeholder="{{ _('Work email') }}" aria-label="{{ _('Work email') }}" required autocomplete="email">
+						</div>
+						<div class="form-group mt-3">
+							<input type="tel" id="reg_phone" class="form-control"
+								placeholder="{{ _('Phone') }}" aria-label="{{ _('Phone') }}" autocomplete="tel">
+						</div>
+						<div class="form-group mt-3">
+							<input type="text" id="reg_company_name" class="form-control"
+								placeholder="{{ _('Company name') }}" aria-label="{{ _('Company name') }}" required autocomplete="organization">
+						</div>
+						<div class="form-row-2 mt-3">
+							<div class="form-group">
+								<select id="reg_country" class="form-control" aria-label="{{ _('Country') }}" required>
+									<option value="">{{ _("Select country") }}</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<select id="reg_currency" class="form-control" aria-label="{{ _('Currency') }}" required>
+									<option value="">{{ _("Select currency") }}</option>
+								</select>
+							</div>
 						</div>
 						<div class="page-card-actions">
-							<button class="btn btn-primary btn-block btn-login" type="submit">
-								{{ _("Log in") }}</button>
+							<button type="button" class="btn btn-primary btn-block" data-signup-next>
+								{{ _("Continue") }}</button>
 						</div>
-					</form>
+					</div>
 
-					{% if not disable_signup %}
-					<p class="auth-switch">
-						{{ _("Don't have an account?") }}
-						<a href="#signup">{{ _("Register your company") }}</a>
-					</p>
-					{% endif %}
+					<!-- Step 2 -->
+					<div class="signup-pane" data-signup-step="2">
+						<div class="form-group">
+							<input type="text" id="reg_domain" class="form-control"
+								placeholder="{{ _('Industry / Domain — Retail, Manufacturing…') }}" aria-label="{{ _('Industry / Domain') }}">
+						</div>
+						<div class="form-group mt-3">
+							<input type="text" id="reg_tax_id" class="form-control"
+								placeholder="{{ _('Tax ID / VAT (optional)') }}" aria-label="{{ _('Tax ID / VAT') }}">
+						</div>
+						<div class="form-group mt-3">
+							<input type="url" id="reg_website" class="form-control"
+								placeholder="{{ _('Website — https://') }}" aria-label="{{ _('Website') }}">
+						</div>
+						<div class="form-group mt-3">
+							<input type="tel" id="reg_company_phone" class="form-control"
+								placeholder="{{ _('Company phone (optional)') }}" aria-label="{{ _('Company phone') }}">
+						</div>
+						<div class="form-group mt-3">
+							<textarea id="reg_address" class="form-control" rows="3"
+								placeholder="{{ _('Company address — street, city, postal code') }}" aria-label="{{ _('Company address') }}"></textarea>
+						</div>
+						<div class="form-group mt-3">
+							<textarea id="reg_description" class="form-control" rows="3"
+								placeholder="{{ _('About the company (optional)') }}" aria-label="{{ _('About the company') }}"></textarea>
+						</div>
+						<div class="page-card-actions signup-actions-row">
+							<button type="button" class="btn btn-secondary btn-block" data-signup-back>
+								{{ _("Back") }}</button>
+							<button type="button" class="btn btn-primary btn-block" data-signup-next>
+								{{ _("Continue") }}</button>
+						</div>
+					</div>
+
+					<!-- Step 3 -->
+					<div class="signup-pane" data-signup-step="3">
+						<div class="form-group">
+							<div class="password-field">
+								<input type="password" id="reg_password" class="form-control"
+									placeholder="{{ _('Password — at least 8 characters') }}" aria-label="{{ _('Password') }}" required
+									autocomplete="new-password">
+								<button type="button" class="toggle-password" toggle="#reg_password">
+									{{ _("Show") }}</button>
+							</div>
+						</div>
+						<div class="form-group mt-3">
+							<div class="password-field">
+								<input type="password" id="reg_password_confirm" class="form-control"
+									placeholder="{{ _('Confirm password') }}" aria-label="{{ _('Confirm password') }}" required autocomplete="new-password">
+								<button type="button" class="toggle-password" toggle="#reg_password_confirm">
+									{{ _("Show") }}</button>
+							</div>
+						</div>
+						<p class="signup-hint">
+							{{ _("Your account will be created as company admin and you will be signed in.") }}
+						</p>
+						<div class="page-card-actions signup-actions-row">
+							<button type="button" class="btn btn-secondary btn-block" data-signup-back>
+								{{ _("Back") }}</button>
+							<button type="submit" class="btn btn-primary btn-block btn-signup">
+								{{ _("Create account") }}</button>
+						</div>
+					</div>
+				</form>
+
+				<p class="auth-switch">
+					{{ _("Already have an account?") }}
+					<a href="#login">{{ _("Log in") }}</a>
+				</p>
+				{%- else -%}
+				<div class="auth-heading">
+					<h1>{{ _("Signup Disabled") }}</h1>
+					<p>{{ _("Signups have been disabled for this website.") }}</p>
 				</div>
-			</section>
-
-			<!-- ---------- SIGNUP (multi-step company registration) ---------- -->
-			<section class='for-signup {{ "signup-disabled" if disable_signup else "" }}'>
-				<div class="login-content page-card signup-wide">
-					{%- if not disable_signup -%}
-					<div class="auth-heading">
-						<h1>{{ _("Register your company") }}</h1>
-						<p class="signup-step-caption" data-step-caption>{{ _("Step 1 of 3 — Your details") }}</p>
-					</div>
-
-					<div class="signup-steps" aria-hidden="true">
-						<span class="signup-step is-active" data-step-dot="1">1</span>
-						<span class="signup-step-line"></span>
-						<span class="signup-step" data-step-dot="2">2</span>
-						<span class="signup-step-line"></span>
-						<span class="signup-step" data-step-dot="3">3</span>
-					</div>
-
-					<form class="form-signin form-signup-company" id="company-register-form" role="form" novalidate>
-						<!-- Step 1: Personal + company basics -->
-						<div class="signup-pane is-active" data-signup-step="1">
-							<div class="form-row-2">
-								<div class="form-group">
-									<label class="form-label" for="reg_first_name">{{ _("First name") }}</label>
-									<input type="text" id="reg_first_name" class="form-control"
-										placeholder="{{ _('Jane') }}" required autocomplete="given-name">
-								</div>
-								<div class="form-group">
-									<label class="form-label" for="reg_last_name">{{ _("Last name") }}</label>
-									<input type="text" id="reg_last_name" class="form-control"
-										placeholder="{{ _('Doe') }}" required autocomplete="family-name">
-								</div>
-							</div>
-							<div class="form-group mt-3">
-								<label class="form-label" for="reg_email">{{ _("Work email") }}</label>
-								<input type="email" id="reg_email" class="form-control"
-									placeholder="{{ _('you@company.com') }}" required autocomplete="email">
-							</div>
-							<div class="form-group mt-3">
-								<label class="form-label" for="reg_phone">{{ _("Phone") }}</label>
-								<input type="tel" id="reg_phone" class="form-control"
-									placeholder="{{ _('+1 555 000 0000') }}" autocomplete="tel">
-							</div>
-							<div class="form-group mt-3">
-								<label class="form-label" for="reg_company_name">{{ _("Company name") }}</label>
-								<input type="text" id="reg_company_name" class="form-control"
-									placeholder="{{ _('Acme Trading Ltd') }}" required autocomplete="organization">
-							</div>
-							<div class="form-row-2 mt-3">
-								<div class="form-group">
-									<label class="form-label" for="reg_country">{{ _("Country") }}</label>
-									<select id="reg_country" class="form-control" required>
-										<option value="">{{ _("Select country") }}</option>
-									</select>
-								</div>
-								<div class="form-group">
-									<label class="form-label" for="reg_currency">{{ _("Currency") }}</label>
-									<select id="reg_currency" class="form-control" required>
-										<option value="">{{ _("Select currency") }}</option>
-									</select>
-								</div>
-							</div>
-							<div class="page-card-actions">
-								<button type="button" class="btn btn-primary btn-block" data-signup-next>
-									{{ _("Continue") }}</button>
-							</div>
-						</div>
-
-						<!-- Step 2: Company details -->
-						<div class="signup-pane" data-signup-step="2">
-							<div class="form-group">
-								<label class="form-label" for="reg_domain">{{ _("Industry / Domain") }}</label>
-								<input type="text" id="reg_domain" class="form-control"
-									placeholder="{{ _('Retail, Manufacturing, Services…') }}">
-							</div>
-							<div class="form-group mt-3">
-								<label class="form-label" for="reg_tax_id">{{ _("Tax ID / VAT") }}</label>
-								<input type="text" id="reg_tax_id" class="form-control"
-									placeholder="{{ _('Optional') }}">
-							</div>
-							<div class="form-group mt-3">
-								<label class="form-label" for="reg_website">{{ _("Website") }}</label>
-								<input type="url" id="reg_website" class="form-control"
-									placeholder="https://">
-							</div>
-							<div class="form-group mt-3">
-								<label class="form-label" for="reg_company_phone">{{ _("Company phone") }}</label>
-								<input type="tel" id="reg_company_phone" class="form-control"
-									placeholder="{{ _('Optional — defaults to your phone') }}">
-							</div>
-							<div class="form-group mt-3">
-								<label class="form-label" for="reg_address">{{ _("Company address") }}</label>
-								<textarea id="reg_address" class="form-control" rows="3"
-									placeholder="{{ _('Street, city, postal code') }}"></textarea>
-							</div>
-							<div class="form-group mt-3">
-								<label class="form-label" for="reg_description">{{ _("About the company") }}</label>
-								<textarea id="reg_description" class="form-control" rows="3"
-									placeholder="{{ _('Short description (optional)') }}"></textarea>
-							</div>
-							<div class="page-card-actions signup-actions-row">
-								<button type="button" class="btn btn-secondary btn-block" data-signup-back>
-									{{ _("Back") }}</button>
-								<button type="button" class="btn btn-primary btn-block" data-signup-next>
-									{{ _("Continue") }}</button>
-							</div>
-						</div>
-
-						<!-- Step 3: Password -->
-						<div class="signup-pane" data-signup-step="3">
-							<div class="form-group">
-								<label class="form-label" for="reg_password">{{ _("Password") }}</label>
-								<div class="password-field">
-									<input type="password" id="reg_password" class="form-control"
-										placeholder="{{ _('At least 8 characters') }}" required
-										autocomplete="new-password">
-									<button type="button" class="toggle-password" toggle="#reg_password">
-										{{ _("Show") }}</button>
-								</div>
-							</div>
-							<div class="form-group mt-3">
-								<label class="form-label" for="reg_password_confirm">{{ _("Confirm password") }}</label>
-								<div class="password-field">
-									<input type="password" id="reg_password_confirm" class="form-control"
-										placeholder="••••••••" required autocomplete="new-password">
-									<button type="button" class="toggle-password" toggle="#reg_password_confirm">
-										{{ _("Show") }}</button>
-								</div>
-							</div>
-							<p class="signup-hint">
-								{{ _("Your account will be created as company admin and you will be signed in.") }}
-							</p>
-							<div class="page-card-actions signup-actions-row">
-								<button type="button" class="btn btn-secondary btn-block" data-signup-back>
-									{{ _("Back") }}</button>
-								<button type="submit" class="btn btn-primary btn-block btn-signup">
-									{{ _("Create account") }}</button>
-							</div>
-						</div>
-					</form>
-
-					<p class="auth-switch">
-						{{ _("Already have an account?") }}
-						<a href="#login">{{ _("Log in") }}</a>
-					</p>
-					{%- else -%}
-					<div class="auth-heading">
-						<h1>{{ _("Signup Disabled") }}</h1>
-						<p>{{ _("Signups have been disabled for this website.") }}</p>
-					</div>
+				<div class="page-card-actions">
 					<a href="#login" class="btn btn-primary btn-block">{{ _("Back to Login") }}</a>
-					{%- endif -%}
 				</div>
-			</section>
+				{%- endif -%}
+			</div>
+		</section>
 
-			<!-- ---------- FORGOT PASSWORD ---------- -->
-			<section class="for-forgot">
-				<div class="login-content page-card">
-					<div class="auth-heading">
-						<h1>{{ _("Forgot Password") }}</h1>
-						<p>{{ _("We'll email you a reset link") }}</p>
+		<!-- ---------- FORGOT PASSWORD ---------- -->
+		<section class="for-forgot">
+			<div class="login-content page-card">
+				<div class="auth-heading">
+					<h1>{{ _("Forgot Password") }}</h1>
+					<p>{{ _("We'll email you a reset link") }}</p>
+				</div>
+				<form class="form-signin form-forgot" role="form">
+					<div class="page-card-body">
+						<div class="form-group">
+							<input type="email" id="forgot_email" class="form-control"
+								placeholder="{{ _('Type your email') }}" aria-label="{{ _('Email') }}" required autocomplete="username">
+						</div>
 					</div>
-					<form class="form-signin form-forgot" role="form">
-						<div class="page-card-body">
-							<div class="form-group">
-								<label class="form-label" for="forgot_email">{{ _("Email") }}</label>
-								<input type="email" id="forgot_email" class="form-control"
-									placeholder="{{ _('Type your email') }}" required autocomplete="username">
-							</div>
-						</div>
-						<div class="page-card-actions">
-							<button class="btn btn-primary btn-block btn-forgot" type="submit">
-								{{ _("Reset Password") }}</button>
-						</div>
-					</form>
-					<p class="auth-switch">
-						<a href="#login">{{ _("Back to Login") }}</a>
-					</p>
-				</div>
-			</section>
+					<div class="page-card-actions">
+						<button class="btn btn-primary btn-block btn-forgot" type="submit">
+							{{ _("Reset Password") }}</button>
+					</div>
+				</form>
+				<p class="auth-switch">
+					<a href="#login">{{ _("Back to Login") }}</a>
+				</p>
+			</div>
+		</section>
 
-			<!-- Kept so login.js routes don't break -->
-			<section class="for-email-login"></section>
-			<section class="for-login-with-email-link"></section>
-		</div>
+		<!-- Kept so login.js routes don't break -->
+		<section class="for-email-login"></section>
+		<section class="for-login-with-email-link"></section>
+	</main>
 
-		<div class="auth-footer">
-			{{ _("By continuing you agree to our") }}
-			<a href="/terms">{{ _("Terms of use") }}</a> {{ _("and") }}
-			<a href="/privacy-policy">{{ _("Privacy Policy") }}</a>.
-		</div>
-	</div>
+	<!-- ============ FOOTER ============ -->
+	<footer class="auth-footer">
+		<span>{{ _("Copyright") }} @onerp {{ frappe.utils.now_datetime().year }}</span>
+		<span class="auth-footer-sep"></span>
+		<a href="/terms">{{ _("Terms of use") }}</a>
+		<span class="auth-footer-dot">·</span>
+		<a href="/privacy-policy">{{ _("Privacy Policy") }}</a>
+	</footer>
 
-	<!-- ============ RIGHT PANEL ============ -->
-	<div class="auth-right">
-		<h2>{{ _("Work smarter") }}<br>{{ _("NOT harder") }}</h2>
-		<p class="auth-right-sub">{{ _("Run accounting, inventory, sales and more — all in one place.") }}</p>
-	</div>
-
+</div>
 </div>
 {% endblock %}
 
